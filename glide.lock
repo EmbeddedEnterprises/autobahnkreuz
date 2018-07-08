@@ -1,0 +1,33 @@
+hash: 82f7fb5177c9168a92a1eae87e6dcd1dd4c7af5d23783587111ce41adf9ab655
+updated: 2018-07-08T17:10:22.364897537+02:00
+imports:
+- name: github.com/deckarep/golang-set
+  version: 504e848d77ea4752b3057b8fb46da0e7f746ccf3
+- name: github.com/gammazero/nexus
+  version: a503f07000b6a0583241c7795baa0cd4296545f0
+  repo: https://github.com/EmbeddedEnterprises/nexus.git
+  vcs: git
+  subpackages:
+  - client
+  - router
+  - router/auth
+  - stdlog
+  - transport
+  - transport/serialize
+  - wamp
+  - wamp/crsign
+- name: github.com/gorilla/websocket
+  version: 5ed622c449da6d44c3c8329331ff47a9e5844f71
+- name: github.com/op/go-logging
+  version: 970db520ece77730c7e4724c61121037378659d9
+- name: github.com/spf13/pflag
+  version: 3ebe029320b2676d667ae88da602a5f854788a8a
+- name: github.com/ugorji/go
+  version: 7d51bbe6161dcb8f32a1252c27668ce36e3ef16b
+  subpackages:
+  - codec
+- name: golang.org/x/crypto
+  version: a49355c7e3f8fe157a85be2f77e6e269a0f89602
+  subpackages:
+  - pbkdf2
+testImports: []

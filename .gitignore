@@ -1,0 +1,8 @@
+*~
+bin
+package
+vendor
+*.pem
+*.crt
+*.key
+*.sh
