@@ -10,8 +10,10 @@ import (
 	"os"
 	"os/signal"
 	"reflect"
+
 	"github.com/EmbeddedEnterprises/autobahnkreuz/auth"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/filter"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -82,10 +84,11 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 		URI:           wamp.URI(config.Realm),
 		AnonymousAuth: false,
 		// This is required for localPeers to work.
-		RequireLocalAuth: false,
-		AllowDisclose:    true,
-		EnableMetaKill:   true,
-		EnableMetaModify: true,
+		RequireLocalAuth:     false,
+		AllowDisclose:        true,
+		EnableMetaKill:       true,
+		EnableMetaModify:     true,
+		PublishFilterFactory: filter.NewComplexFilter,
 	}
 	var initers []Initializer
 
