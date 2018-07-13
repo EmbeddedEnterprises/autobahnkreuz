@@ -3,9 +3,9 @@ package auth
 import (
 	"bytes"
 	"errors"
-	"net/http"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
+	"net/http"
 
 	"github.com/gammazero/nexus/wamp"
 )
