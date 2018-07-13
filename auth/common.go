@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -79,14 +80,18 @@ func (self *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*
 	} else {
 		targetList = authRoleList
 	}
-
+	welcomeDetails := wamp.Dict{}
+	if len(result.Arguments) > 1 {
+		if dict, dictok := wamp.AsDict(result.Arguments[1]); dictok {
+			welcomeDetails = dict
+		}
+	}
+	welcomeDetails["authid"] = authid
+	welcomeDetails["authrole"] = targetList
+	welcomeDetails["authextra"] = userData
+	welcomeDetails["authprovider"] = "dynamic"
+	welcomeDetails["authmethod"] = self.AuthMethodValue
 	return &wamp.Welcome{
-		Details: wamp.Dict{
-			"authid":       authid,
-			"authrole":     targetList,
-			"authextra":    userData,
-			"authprovider": "dynamic",
-			"authmethod":   self.AuthMethodValue,
-		},
+		Details: welcomeDetails,
 	}, nil
 }
