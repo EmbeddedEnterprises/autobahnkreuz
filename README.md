@@ -3,6 +3,30 @@
 
 An advanced wamp router based on nexus.
 
+## Installation
+
+### Docker
+
+[Docker Hub](https://hub.docker.com/r/embeddedenterprises/autobahnkreuz/)
+
+You can easily get an docker image on your machine.  
+`docker pull embeddedenterprises/autobahnkreuz:edge`
+
+You can start and configure this image with the following command.  
+`docker run embeddedenterprises/autobahnkreuz:edge`
+
+Afterwards you can enter your configuration parameters. The entire router does not save state to the container or to mounted volumes.
+
+### Local
+
+It is nessesary to have a working go installation on your system.  
+We recommend to use [burrow](https://github.com/EmbeddedEnterprises/burrow) to install this project.  
+Burrow is another go dependency management tool, which is also maintainted by [EmbeddedEnterprises](https://github.com/EmbeddedEnterprises).
+
+`burrow clone https://github.com/EmbeddedEnterprises/autobahnkreuz/` installs the programm to the correct location in your go path.
+After entering the `autobahnkreuz` folder, you can use `burrow run` to start `autobahnkreuz`.
+To configure the instance, you can append your configuration parameters to the `burrow run` command, e.g. `burrow run -- -h.`
+
 ## About this project
 
 There are multiple wamp routers available off the shelf, we evaluated many of them
