@@ -125,37 +125,56 @@ func (f *simplePublishFilter) PublishAllowed(sub *wamp.Session) bool {
 		}
 	}
 
+	getSessAttrs := func(attr string) ([]string, bool) {
+		sessAttrs := []string{}
+		if rawAttrs, ok := wamp.AsList(sub.Details[attr]); !ok {
+			if sessAttr, ok := wamp.AsString(sub.Details[attr]); !ok {
+				return nil, ok
+			} else {
+				sessAttrs = append(sessAttrs, sessAttr)
+			}
+		} else {
+			for _, attr := range rawAttrs {
+				if sessAttr, ok := wamp.AsString(attr); ok {
+					sessAttrs = append(sessAttrs, sessAttr)
+				}
+			}
+		}
+		return sessAttrs, true
+	}
+
 	// Check blacklists to see if session has a value in any blacklist.
 	for attr, vals := range f.blMap {
-		// Get the session attribute value to compare with blacklist.
-		sessAttr, _ := wamp.AsString(sub.Details[attr])
-		if sessAttr == "" {
+		sessAttrs, ok := getSessAttrs(attr)
+		if !ok {
 			continue
 		}
 		// Check each blacklisted value to see if session attribute is one.
 		for i := range vals {
-			if vals[i] == sessAttr {
-				// Session has blacklisted attribute value.
-				return false
+			for j := range sessAttrs {
+				if vals[i] == sessAttrs[j] {
+					// Session has blacklisted attribute value.
+					return false
+				}
 			}
 		}
 	}
 
 	// Check whitelists to make sure session has value in each whitelist.
 	for attr, vals := range f.wlMap {
-		// Get the session attribute value to compare with whitelist.
-		sessAttr, _ := wamp.AsString(sub.Details[attr])
-		if sessAttr == "" {
-			// Session does not have whitelisted value, so deny.
+		sessAttrs, ok := getSessAttrs(attr)
+		if !ok {
 			return false
 		}
 		eligible = false
 		// Check all whitelisted values to see is session attribute is one.
 		for i := range vals {
-			if vals[i] == sessAttr {
-				// Session has whitelisted attribute value.
-				eligible = true
-				break
+			for j := range sessAttrs {
+				if vals[i] == sessAttrs[j] {
+					// Session has whitelisted attribute value.
+					eligible = true
+					break
+				}
 			}
 		}
 		// If session attribute value no found in whitelist, then deny.

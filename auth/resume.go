@@ -48,7 +48,7 @@ func NewResumeAuthenticator(authrolefunc string, realm string, invalidRoles maps
 }
 
 func (self *ResumeAuthenticator) Initialize() {
-	err := util.LocalClient.Register("wamp.auth.create-token", self.CreateNewToken, wamp.Dict{})
+	err := util.LocalClient.Register("embent.auth.create-token", self.CreateNewToken, wamp.Dict{})
 	if err != nil {
 		util.Logger.Criticalf("Failed to register create-token method!")
 		os.Exit(1)

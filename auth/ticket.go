@@ -81,7 +81,7 @@ func (self *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, clie
 		return nil, err
 	}
 	if self.AllowResumeToken && wamp.OptionFlag(authRsp.Extra, "generate-token") {
-		resp, err := util.LocalClient.Call(context.Background(), "wamp.auth.create-token", nil, wamp.List{
+		resp, err := util.LocalClient.Call(context.Background(), "embent.auth.create-token", nil, wamp.List{
 			authid,
 		}, nil, "")
 		if err == nil {
