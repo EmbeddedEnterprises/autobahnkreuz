@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -43,9 +44,10 @@ func NewFeatureAuthorizer(permitDefault bool, matrixURI string, mappingURI strin
 
 func (this *FeatureAuthorizer) Initialize() {
 
-	util.Logger.Infof("Initalising Feature Authroizer..")
+	util.Logger.Infof("Initializing Feature Authroizer..")
 	util.Logger.Infof("Registering wamp.featureauth.update")
 
+	// TBD: We can't use wamp.* prefix here, it's restricted to the router-internal meta client.
 	err := util.LocalClient.Register("wamp.featureauth.update", this.Update, wamp.Dict{})
 
 	if err != nil {
@@ -71,10 +73,9 @@ func (this *FeatureAuthorizer) Update(_ context.Context, args wamp.List, _, _ wa
 		return &client.InvokeResult{
 			Err: wamp.URI("wamp.error.internal-error"),
 		}
-	} else {
-		return &client.InvokeResult{}
 	}
 
+	return &client.InvokeResult{}
 }
 
 func (this *FeatureAuthorizer) UpdateMapping() error {

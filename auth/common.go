@@ -10,6 +10,8 @@ import (
 	"github.com/gammazero/nexus/wamp"
 )
 
+// SharedSecretAuthenticator is a base type of authenticators which operate on
+// shared secrets like passwords and tokens.
 type SharedSecretAuthenticator struct {
 	Realm                    string
 	UpstreamGetAuthRolesFunc string
@@ -17,19 +19,22 @@ type SharedSecretAuthenticator struct {
 	AuthMethodValue          string
 }
 
-func (self *SharedSecretAuthenticator) AuthMethod() string {
-	return self.AuthMethodValue
+// AuthMethod returns a string representing the type of the authenticator
+func (s *SharedSecretAuthenticator) AuthMethod() string {
+	return s.AuthMethodValue
 }
 
-func (self *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wamp.Welcome, error) {
+// FetchAndFilterAuthRoles tries to fetch authroles for a previously authenticated
+// client based on its authid using the configured UpstreamGetAuthRolesFunc
+func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wamp.Welcome, error) {
 	ctx := context.Background()
 	empty := wamp.Dict{}
-	result, err := util.LocalClient.Call(ctx, self.UpstreamGetAuthRolesFunc, empty, wamp.List{
-		self.Realm,
+	result, err := util.LocalClient.Call(ctx, s.UpstreamGetAuthRolesFunc, empty, wamp.List{
+		s.Realm,
 		authid,
 	}, empty, "")
 	if err != nil {
-		util.Logger.Warningf("Failed to call `%s`: %v", self.UpstreamGetAuthRolesFunc, err)
+		util.Logger.Warningf("Failed to call `%s`: %v", s.UpstreamGetAuthRolesFunc, err)
 		return nil, errors.New("Unauthorized")
 	}
 	if len(result.Arguments) == 0 {
@@ -64,13 +69,13 @@ func (self *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*
 		}
 	}
 
-	if self.InvalidAuthRoles != nil {
+	if s.InvalidAuthRoles != nil {
 		rawAuthRoles := mapset.NewSet()
 		for _, x := range authRoleList {
 			rawAuthRoles.Add(x)
 		}
 
-		filteredSet := rawAuthRoles.Difference(self.InvalidAuthRoles)
+		filteredSet := rawAuthRoles.Difference(s.InvalidAuthRoles)
 
 		for x := range filteredSet.Iter() {
 			role := x.(string)
@@ -90,7 +95,7 @@ func (self *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*
 	welcomeDetails["authrole"] = targetList
 	welcomeDetails["authextra"] = userData
 	welcomeDetails["authprovider"] = "dynamic"
-	welcomeDetails["authmethod"] = self.AuthMethodValue
+	welcomeDetails["authmethod"] = s.AuthMethodValue
 	return &wamp.Welcome{
 		Details: welcomeDetails,
 	}, nil

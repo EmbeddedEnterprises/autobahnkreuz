@@ -9,6 +9,8 @@ import (
 	"github.com/gammazero/nexus/wamp"
 )
 
+// DynamicAuthorizer is an authorizer that uses a WAMP RPC call to verify permissions
+// for various actions like CALL, SUBSCRIBE, PUBLISH, REGISTER
 type DynamicAuthorizer struct {
 	PermitDefault      bool
 	TrustedAuthRoles   mapset.Set
@@ -16,15 +18,16 @@ type DynamicAuthorizer struct {
 	Realm              string
 }
 
-func (self DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool, error) {
+// Authorize checks whether the session `sess` is allowed to send the message `msg`
+func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool, error) {
 
 	roles, err := extractAuthRoles(sess.Details["authrole"])
 
 	if err != nil {
-		return self.PermitDefault, nil
+		return a.PermitDefault, nil
 	}
 
-	isTrustedAuthRole := roles.checkTrustedAuthRoles(self.TrustedAuthRoles)
+	isTrustedAuthRole := roles.checkTrustedAuthRoles(a.TrustedAuthRoles)
 
 	if isTrustedAuthRole {
 		return true, nil
@@ -47,7 +50,7 @@ func (self DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (b
 		msgType = "publish"
 		uri = msg.(*wamp.Publish).Topic
 	default:
-		return self.PermitDefault, nil
+		return a.PermitDefault, nil
 	}
 
 	//util.Logger.Debugf("Authorizing %v on %v for roles %v", msgType, uri, roles)
@@ -55,14 +58,14 @@ func (self DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (b
 	ctx := context.Background()
 	empty := wamp.Dict{}
 	session := wamp.Dict{
-		"realm":        self.Realm,
+		"realm":        a.Realm,
 		"authprovider": sess.Details["authprovider"],
 		"authid":       sess.Details["authid"],
 		"session":      sess.ID,
 		"authmethod":   sess.Details["authmethod"],
 		"authrole":     roles,
 	}
-	res, err := util.LocalClient.Call(ctx, self.UpstreamAuthorizer, empty, wamp.List{
+	res, err := util.LocalClient.Call(ctx, a.UpstreamAuthorizer, empty, wamp.List{
 		session,
 		uri,
 		msgType,
@@ -70,12 +73,12 @@ func (self DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (b
 
 	if err != nil {
 		util.Logger.Warningf("Failed to run authorizer: %v", err)
-		return self.PermitDefault, nil
+		return a.PermitDefault, nil
 	}
 
 	if res.Arguments == nil || len(res.Arguments) == 0 {
 		util.Logger.Warning("Authorizer returned no result")
-		return self.PermitDefault, nil
+		return a.PermitDefault, nil
 	}
 	permit, ok := res.Arguments[0].(bool)
 	if ok {
@@ -98,5 +101,5 @@ func (self DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (b
 		}
 	}
 
-	return self.PermitDefault, nil
+	return a.PermitDefault, nil
 }

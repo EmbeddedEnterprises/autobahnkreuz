@@ -143,17 +143,41 @@ We recommend the awesome [EasyPKI](https://github.com/google/easypki) project to
 
 ### Authorization
 
-- Authorization is left to be done, so you are on your own now.
+`autobahnkreuz` provides two different ways to authorize WAMP actions:
+
+- Dynamic authorization using a provided WAMP endpoint
+- Authorization based on a feature matrix (**alpha state, not production ready**)
+
+You can only use **one** authorization method at a time, by default, this is the dynamic authorization.
+
+#### Dynamic Authorization
+
+Dynamic authorization calls a WAMP endpoint for each action which has to be authorized. It is enabled by default and can be disabled via the `--enable-authorization` flag. For dynamic authorization to work, the user has to provide a WAMP RPC which is called every time an action has to be authorized in the `--authorizer-func` parameter.
+
+The dynamic authorizer has a fallback value, which is used whenever the authorization function is not available or generates an error, the default value is to reject any actions, but it can be configured to permit any actions. (`--authorizer-fallback`)
+
+To reduce load on the authorization endpoint, a **fast-path** checking can be enabled directly within autobahnkreuz. You can pass a list of `trusted` authroles to the authorizer, which means that for any action of those authroles, the endpoint will **NOT** get called, but the action is allowed directly. This improves latency and efficiency of the dynamic authorization.
 
 | CLI Parameter                     | Type      | Default Value  | Description |
 | --------------------------------- | --------- | -------------- | ----------- |
 | --authorizer-fallback             | string    | reject         | Whether to permit any actions if the authorizer endpoint fails (values: 'permit', 'reject') |
 | --authorizer-func                 | string    | nil            | Which WAMP RPC to call when an action has to be authorized |
 | --enable-authorization            | bool      | true           | Enable dynamic checking of auth roles |
+| --trusted-authroles               | string[]  | nil            | Authorize any actions of these authentication roles |
+
+
+#### Feature Authorization
+
+- TBD.
+- This feature is **NOT** production ready at this time.
+- Find additional documentation [here](auth/feature.md)
+- When you want to use feature authorization, be sure to set `--enable-authorization=false` and `--enable-feature-authorization=true`
+
+| CLI Parameter                     | Type      | Default Value  | Description |
+| --------------------------------- | --------- | -------------- | ----------- |
 | --enable-feature-authorization    | bool      | false          | Enable authorization checking based on a feature matrix |
 | --feature-authorizer-mapping-func | string    | nil            | Which WAMP RPC to call to get a feature mapping |
 | --feature-authorizer-matrix-func  | string    | nil            | Which WAMP RPC to call to get a feature matrix |
-| --trusted-authroles               | string[]  | nil            | Authorize any actions of these authentication roles |
 
 ## Using autobahnkreuz
 

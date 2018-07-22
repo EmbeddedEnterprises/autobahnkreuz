@@ -23,17 +23,21 @@ func randomHex(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-type Token struct {
+type token struct {
 	AuthID     string
 	ExpireDate time.Time
 }
 
+// ResumeAuthenticator is an authenticator which performs authentication based
+// on a previously created one-time-token.
+// It is designed to be used with the normal ticket authenticator.
 type ResumeAuthenticator struct {
 	SharedSecretAuthenticator
 	// Map from token -> Token
-	Tokens map[string]Token
+	Tokens map[string]token
 }
 
+// NewResumeAuthenticator creates a new ResumeAuthenticator based on the given parameters
 func NewResumeAuthenticator(authrolefunc string, realm string, invalidRoles mapset.Set) (*ResumeAuthenticator, error) {
 	x := &ResumeAuthenticator{
 		SharedSecretAuthenticator: SharedSecretAuthenticator{
@@ -42,20 +46,21 @@ func NewResumeAuthenticator(authrolefunc string, realm string, invalidRoles maps
 			Realm:            realm,
 			UpstreamGetAuthRolesFunc: authrolefunc,
 		},
-		Tokens: make(map[string]Token),
+		Tokens: make(map[string]token),
 	}
 	return x, nil
 }
 
-func (self *ResumeAuthenticator) Initialize() {
-	err := util.LocalClient.Register("embent.auth.create-token", self.CreateNewToken, wamp.Dict{})
+// Initialize registers the create-new-token-endpoint
+func (r *ResumeAuthenticator) Initialize() {
+	err := util.LocalClient.Register("embent.auth.create-token", r.createNewToken, wamp.Dict{})
 	if err != nil {
 		util.Logger.Criticalf("Failed to register create-token method!")
 		os.Exit(1)
 	}
 }
 
-func (self *ResumeAuthenticator) CreateNewToken(_ context.Context, args wamp.List, _, _ wamp.Dict) *client.InvokeResult {
+func (r *ResumeAuthenticator) createNewToken(_ context.Context, args wamp.List, _, _ wamp.Dict) *client.InvokeResult {
 	if len(args) == 0 {
 		return &client.InvokeResult{
 			Err: wamp.ErrInvalidArgument,
@@ -67,24 +72,26 @@ func (self *ResumeAuthenticator) CreateNewToken(_ context.Context, args wamp.Lis
 			Err: wamp.ErrInvalidArgument,
 		}
 	}
-	token, err := randomHex(64)
+	userToken, err := randomHex(64)
 	if err != nil {
 		return &client.InvokeResult{
 			Err: wamp.URI("wamp.error.internal-error"),
 		}
 	}
-	self.Tokens[token] = Token{
+	r.Tokens[userToken] = token{
 		AuthID:     authid,
 		ExpireDate: time.Now().Add(7 * 24 * time.Hour), // one week
 	}
 	return &client.InvokeResult{
 		Args: wamp.List{
-			token,
+			userToken,
 		},
 	}
 }
 
-func (self *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, client wamp.Peer) (*wamp.Welcome, error) {
+// Authenticate asks for the users ticket, checks the provided response with the
+// list of previously created tokens.
+func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, client wamp.Peer) (*wamp.Welcome, error) {
 	authid := wamp.OptionString(details, "authid")
 	if authid != "resume" {
 		return nil, errors.New("Unauthorized")
@@ -93,7 +100,7 @@ func (self *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, cl
 	// Challenge Extra map is empty since the ticket challenge only asks for a
 	// ticket (using authmethod) and provides no additional challenge info.
 	err := client.Send(&wamp.Challenge{
-		AuthMethod: self.AuthMethod(),
+		AuthMethod: r.AuthMethod(),
 		Extra:      wamp.Dict{},
 	})
 	if err != nil {
@@ -113,8 +120,8 @@ func (self *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, cl
 	}
 
 	token := authRsp.Signature
-	tokenObj, ok := self.Tokens[token]
-	delete(self.Tokens, token)
+	tokenObj, ok := r.Tokens[token]
+	delete(r.Tokens, token)
 
 	if !ok || time.Now().After(tokenObj.ExpireDate) {
 		return nil, errors.New("Unauthorized")
@@ -122,11 +129,11 @@ func (self *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, cl
 
 	authid = tokenObj.AuthID
 	util.Logger.Infof("Token login for user %v", authid)
-	newTokenRes := self.CreateNewToken(context.Background(), wamp.List{
+	newTokenRes := r.createNewToken(context.Background(), wamp.List{
 		authid,
 	}, nil, nil)
 
-	welcome, err := self.FetchAndFilterAuthRoles(authid)
+	welcome, err := r.FetchAndFilterAuthRoles(authid)
 	if err != nil {
 		return nil, err
 	}

@@ -7,10 +7,13 @@ import (
 	"github.com/gammazero/nexus/wamp"
 )
 
-type AuthRoles []string
+// authRoles is a list of authroles which can be used to check against a set of authroles
+type authRoles []string
 
-func extractAuthRoles(rolesRawInterface interface{}) (*AuthRoles, error) {
-	roles := AuthRoles{}
+// extractAuthRoles converts a result list or string to an instance of authroles
+// rolesRawInterface may be a string or a list of strings
+func extractAuthRoles(rolesRawInterface interface{}) (*authRoles, error) {
+	roles := authRoles{}
 	roleRaw, okStr := rolesRawInterface.(string)
 	rolesRaw, okArr := wamp.AsList(rolesRawInterface)
 	if okStr {
@@ -23,20 +26,20 @@ func extractAuthRoles(rolesRawInterface interface{}) (*AuthRoles, error) {
 			}
 		}
 	} else {
-		return nil, errors.New("Unable to get roles from rolesRawInterface.")
+		return nil, errors.New("Unable to get roles from rolesRawInterface")
 	}
 
 	return &roles, nil
 
 }
 
-func (this AuthRoles) checkTrustedAuthRoles(trustedAuthRoles mapset.Set) bool {
+func (r authRoles) checkTrustedAuthRoles(trustedAuthRoles mapset.Set) bool {
 	if trustedAuthRoles.Cardinality() > 0 {
 		// Trusted auth roles are an abstract concept used to reduce network
 		// load and latency for often-published topic.
 		// When adding your system role to the trusted auth roles, it can save up
 		// to 80% bandwidth
-		for _, role := range this {
+		for _, role := range r {
 			if trustedAuthRoles.Contains(role) {
 				return true
 			}

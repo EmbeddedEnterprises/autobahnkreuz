@@ -11,12 +11,15 @@ import (
 	"github.com/gammazero/nexus/wamp"
 )
 
+// DynamicTicketAuth is an authenticator which performs authentication based on
+// a user and its password (i.e. shared secret)
 type DynamicTicketAuth struct {
 	SharedSecretAuthenticator
 	UpstreamAuthFunc string
 	AllowResumeToken bool
 }
 
+// NewDynamicTicket creates a new DynamicTicketAuth object based on the given parameters
 func NewDynamicTicket(authfunc string, authrolefunc string, realm string, invalid mapset.Set, allowtoken bool) (*DynamicTicketAuth, error) {
 	x := &DynamicTicketAuth{
 		SharedSecretAuthenticator: SharedSecretAuthenticator{
@@ -31,7 +34,9 @@ func NewDynamicTicket(authfunc string, authrolefunc string, realm string, invali
 	return x, nil
 }
 
-func (self *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client wamp.Peer) (*wamp.Welcome, error) {
+// Authenticate authenticates requests a ticket (=password) from the user and
+// authenticates the user based on its response.
+func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client wamp.Peer) (*wamp.Welcome, error) {
 	ctx := context.Background()
 	empty := wamp.Dict{}
 	authid := wamp.OptionString(details, "authid")
@@ -42,7 +47,7 @@ func (self *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, clie
 	// Challenge Extra map is empty since the ticket challenge only asks for a
 	// ticket (using authmethod) and provides no additional challenge info.
 	err := client.Send(&wamp.Challenge{
-		AuthMethod: self.AuthMethod(),
+		AuthMethod: a.AuthMethod(),
 		Extra:      wamp.Dict{},
 	})
 	if err != nil {
@@ -66,21 +71,21 @@ func (self *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, clie
 	ticketObj := wamp.Dict{
 		"ticket": authRsp.Signature,
 	}
-	_, err = util.LocalClient.Call(ctx, self.UpstreamAuthFunc, empty, wamp.List{
-		self.Realm,
+	_, err = util.LocalClient.Call(ctx, a.UpstreamAuthFunc, empty, wamp.List{
+		a.Realm,
 		authid,
 		ticketObj,
 	}, empty, "")
 	if err != nil {
-		util.Logger.Warningf("Failed to call `%s`: %v", self.UpstreamAuthFunc, err)
+		util.Logger.Warningf("Failed to call `%s`: %v", a.UpstreamAuthFunc, err)
 		return nil, errors.New("Unauthorized")
 	}
 
-	welcome, err := self.FetchAndFilterAuthRoles(authid)
+	welcome, err := a.FetchAndFilterAuthRoles(authid)
 	if err != nil {
 		return nil, err
 	}
-	if self.AllowResumeToken && wamp.OptionFlag(authRsp.Extra, "generate-token") {
+	if a.AllowResumeToken && wamp.OptionFlag(authRsp.Extra, "generate-token") {
 		resp, err := util.LocalClient.Call(context.Background(), "embent.auth.create-token", nil, wamp.List{
 			authid,
 		}, nil, "")
