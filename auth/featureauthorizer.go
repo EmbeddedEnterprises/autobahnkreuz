@@ -47,8 +47,9 @@ func (this *FeatureAuthorizer) Initialize() {
 	util.Logger.Infof("Initializing Feature Authroizer..")
 	util.Logger.Infof("Registering wamp.featureauth.update")
 
-	// TBD: We can't use wamp.* prefix here, it's restricted to the router-internal meta client.
-	err := util.LocalClient.Register("wamp.featureauth.update", this.Update, wamp.Dict{})
+	// TBD: We can't use wamp.* prefix here, it's restricted to the router-internal meta client. - Martin
+	// I just changed it to ee.*, which should be the fitting namespace at this point. - Johann
+	err := util.LocalClient.Register("ee.featureauth.update", this.Update, wamp.Dict{})
 
 	if err != nil {
 		util.Logger.Warningf("%v", err)
