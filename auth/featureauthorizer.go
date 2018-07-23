@@ -247,7 +247,10 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 	case wamp.PUBLISH:
 		messageURI = msg.(*wamp.Publish).Topic
 	default:
-		return this.PermitDefault, nil
+		// I am pretty sure, I changed this earlier to true.
+		// It is important to allow every other call than
+		// CALL, REGISTER, SUBSCRIBE and PUBLISH to allow nexus to function correctly.
+		return true, nil
 	}
 
 	featureMapping := *this.FeatureMapping
