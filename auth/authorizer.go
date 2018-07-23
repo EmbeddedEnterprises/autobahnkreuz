@@ -50,7 +50,8 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 		msgType = "publish"
 		uri = msg.(*wamp.Publish).Topic
 	default:
-		return a.PermitDefault, nil
+		// Fixed the same bug as in the Feature Authorizer.
+		return true, nil
 	}
 
 	//util.Logger.Debugf("Authorizing %v on %v for roles %v", msgType, uri, roles)
