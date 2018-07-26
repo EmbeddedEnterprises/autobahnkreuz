@@ -273,6 +273,10 @@ func main() {
 		util.Logger.Criticalf("Failed to connect local client: %v", err)
 		os.Exit(1)
 	}
+	if err := util.RegisterPing(util.LocalClient); err != nil {
+		util.Logger.Criticalf("Failed to register ping function!")
+		os.Exit(1)
+	}
 	util.Logger.Info("Router started, local client connected.")
 
 	// Wait for SIGINT (CTRL-c), then close server and exit.
