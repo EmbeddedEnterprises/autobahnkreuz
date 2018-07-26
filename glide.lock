@@ -1,5 +1,5 @@
 hash: 82f7fb5177c9168a92a1eae87e6dcd1dd4c7af5d23783587111ce41adf9ab655
-updated: 2018-07-23T11:45:49.845779898+02:00
+updated: 2018-07-26T11:14:04.421552599+02:00
 imports:
 - name: github.com/deckarep/golang-set
   version: 504e848d77ea4752b3057b8fb46da0e7f746ccf3
@@ -27,7 +27,7 @@ imports:
   subpackages:
   - codec
 - name: golang.org/x/crypto
-  version: a2144134853fc9a27a7b1e3eb4f19f1a76df13c9
+  version: c126467f60eb25f8f27e5a981f32a87e3965053f
   subpackages:
   - pbkdf2
 testImports: []

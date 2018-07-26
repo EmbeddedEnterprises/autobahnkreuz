@@ -8,6 +8,7 @@ import (
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
+	superClient "github.com/gammazero/nexus/client"
 	"github.com/gammazero/nexus/wamp"
 )
 
@@ -41,7 +42,7 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 	empty := wamp.Dict{}
 	authid := wamp.OptionString(details, "authid")
 	if authid == "" {
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New("wamp.error.empty-auth-id")
 	}
 
 	// Challenge Extra map is empty since the ticket challenge only asks for a
@@ -63,7 +64,7 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 	authRsp, ok := msg.(*wamp.Authenticate)
 	if !ok {
 		util.Logger.Warningf("Protocol violation from %v: %v", client, msg.MessageType())
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New(string(wamp.ErrProtocolViolation))
 	}
 
 	// We wrap the ticket inside an object to match the signature of crossbar.io here.
@@ -78,7 +79,14 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 	}, empty, "")
 	if err != nil {
 		util.Logger.Warningf("Failed to call `%s`: %v", a.UpstreamAuthFunc, err)
-		return nil, errors.New("Unauthorized")
+
+		castErr, ok := err.(superClient.RPCError)
+
+		if !ok {
+			return nil, errors.New("wamp.error.internal-error")
+		}
+
+		return nil, errors.New(string(castErr.Err.Error))
 	}
 
 	welcome, err := a.FetchAndFilterAuthRoles(authid)
@@ -86,7 +94,7 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 		return nil, err
 	}
 	if a.AllowResumeToken && wamp.OptionFlag(authRsp.Extra, "generate-token") {
-		resp, err := util.LocalClient.Call(context.Background(), "embent.auth.create-token", nil, wamp.List{
+		resp, err := util.LocalClient.Call(context.Background(), "ee.auth.create-token", nil, wamp.List{
 			authid,
 		}, nil, "")
 		if err == nil {
