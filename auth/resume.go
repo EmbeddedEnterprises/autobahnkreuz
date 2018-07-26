@@ -53,7 +53,8 @@ func NewResumeAuthenticator(authrolefunc string, realm string, invalidRoles maps
 
 // Initialize registers the create-new-token-endpoint
 func (r *ResumeAuthenticator) Initialize() {
-	err := util.LocalClient.Register("embent.auth.create-token", r.createNewToken, wamp.Dict{})
+	// Patched to ee to be similar to featureAuthorizer.
+	err := util.LocalClient.Register("ee.auth.create-token", r.createNewToken, wamp.Dict{})
 	if err != nil {
 		util.Logger.Criticalf("Failed to register create-token method!")
 		os.Exit(1)
@@ -94,7 +95,7 @@ func (r *ResumeAuthenticator) createNewToken(_ context.Context, args wamp.List, 
 func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, client wamp.Peer) (*wamp.Welcome, error) {
 	authid := wamp.OptionString(details, "authid")
 	if authid != "resume" {
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New("wamp.error.wrong-auth-id")
 	}
 
 	// Challenge Extra map is empty since the ticket challenge only asks for a
@@ -116,7 +117,7 @@ func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 	authRsp, ok := msg.(*wamp.Authenticate)
 	if !ok {
 		util.Logger.Warningf("Protocol violation from %v: %v", client, msg.MessageType())
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New(string(wamp.ErrProtocolViolation))
 	}
 
 	token := authRsp.Signature
@@ -124,7 +125,7 @@ func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 	delete(r.Tokens, token)
 
 	if !ok || time.Now().After(tokenObj.ExpireDate) {
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New("wamp.error.invalid-token")
 	}
 
 	authid = tokenObj.AuthID
