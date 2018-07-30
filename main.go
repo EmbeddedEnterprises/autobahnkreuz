@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"reflect"
+	"time"
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/auth"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
@@ -237,6 +238,8 @@ func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 	srv.SetConfig(transport.WebsocketConfig{
 		EnableRequestCapture: true,
 	})
+
+	srv.KeepAlive = 5 * time.Second
 
 	// Disable CORS, since we're running behind a reverse proxy anyway
 	srv.Upgrader.CheckOrigin = func(r *http.Request) bool {
