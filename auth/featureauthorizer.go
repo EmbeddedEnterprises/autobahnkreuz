@@ -6,7 +6,7 @@ import (
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 
 	"github.com/gammazero/nexus/client"
 	"github.com/gammazero/nexus/wamp"
@@ -254,7 +254,25 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 	}
 
 	featureMapping := *this.FeatureMapping
-	featureURI := featureMapping[messageURI]
+	featureURI, isOkay := featureMapping[messageURI]
+
+	if !isOkay {
+
+		for potentialMessageURI, tFeatureURI := range featureMapping {
+			isMatchingWildcard := messageURI.WildcardMatch(potentialMessageURI)
+			util.Logger.Debugf("messsageURI: %v, potentialMessageURI: %v, isMatchingWildcard: %v", messageURI, potentialMessageURI, isMatchingWildcard)
+
+			if isMatchingWildcard {
+				featureURI = tFeatureURI
+				isOkay = true
+				break
+			}
+		}
+	}
+
+	if !isOkay {
+		return this.PermitDefault, nil
+	}
 
 	featureMatrix := *this.FeatureMatrix
 
