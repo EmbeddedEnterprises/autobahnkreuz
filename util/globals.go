@@ -66,7 +66,7 @@ func Init() {
 
 	// read environment variable of level
 	var logLevel logging.Level
-	switch strings.ToLower(os.Getenv(EnvLogLevel)) {
+	switch strings.ToUpper(os.Getenv(EnvLogLevel)) {
 	case "CRITICAL":
 		logLevel = logging.CRITICAL
 	case "ERROR":
