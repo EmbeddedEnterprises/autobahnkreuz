@@ -20,6 +20,11 @@ const (
 // EnvLogFormat is kept for compatibility with the service lib.
 const EnvLogFormat string = "SERVICE_LOGFORMAT"
 
+// EnvLogLevel determines the desired level of logging depth
+const EnvLogLevel string = "SERVICE_LOGLEVEL"
+
+const ModuleName string = "enterprises.embedded.autobahnkreuz"
+
 var Logger *logging.Logger
 var LocalClient *client.Client
 var Router router.Router
@@ -27,7 +32,7 @@ var Router router.Router
 func Init() {
 	// setup logging library
 	var err error
-	Logger, err = logging.GetLogger("enterprises.embedded.autobahnkreuz")
+	Logger, err = logging.GetLogger(ModuleName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating logger: %s\n", err)
 		os.Exit(ExitService)
@@ -58,4 +63,23 @@ func Init() {
 
 	backendFormatted := logging.NewBackendFormatter(backend, logFormat)
 	logging.SetBackend(backendFormatted)
+
+	// read environment variable of level
+	var logLevel logging.Level
+	switch strings.ToLower(os.Getenv(EnvLogLevel)) {
+	case "CRITICAL":
+		logLevel = logging.CRITICAL
+	case "ERROR":
+		logLevel = logging.ERROR
+	case "WARN":
+		logLevel = logging.WARNING
+	case "INFO":
+		logLevel = logging.INFO
+	case "DEBUG":
+		logLevel = logging.DEBUG
+	default:
+		logLevel = logging.INFO
+	}
+	// since we only use one logging backend and have the name on hand this will suffice
+	logging.SetLevel(logLevel, ModuleName)
 }
