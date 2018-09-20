@@ -36,6 +36,15 @@ Burrow is another go dependency management tool, which is also maintainted by [E
 After entering the `autobahnkreuz` folder, you can use `burrow run` to start `autobahnkreuz`.
 To configure the instance, you can append your configuration parameters to the `burrow run` command, e.g. `burrow run -- -h.`
 
+### Build Your Own Containers
+
+It is also possible to build your own container.
+
+**Notice**: Don't use the `Dockerfile`. This is meant to build the docker images. It clones the git repository and don't use your local files.
+**Notice**: You need to rename or remove the `.dockerignore` file. `.dockerignore` ignores everything due to several CI reasons. We are sorry about this.
+
+`docker build -t autobahnkreuz:test -f DockerfileLocal .` will build the docker image.
+
 ## Configuration
 
 To allow `autobahnkreuz` to run, at least a realm has to be specified. This is done using `--realm` or `-r` and has to be a valid URI.
