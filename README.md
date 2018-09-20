@@ -40,7 +40,8 @@ To configure the instance, you can append your configuration parameters to the `
 
 It is also possible to build your own container.
 
-**Notice**: Don't use the `Dockerfile`. This is meant to build the docker images. It clones the git repository and don't use your local files.
+**Notice**: Don't use the `Dockerfile`. This is meant to build the docker images. It clones the git repository and don't use your local files.  
+
 **Notice**: You need to rename or remove the `.dockerignore` file. `.dockerignore` ignores everything due to several CI reasons. We are sorry about this.
 
 `docker build -t autobahnkreuz:test -f DockerfileLocal .` will build the docker image.
