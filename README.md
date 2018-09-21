@@ -65,10 +65,10 @@ At the moment, no live-reload of certificates is supported, so to use new certif
 The TLS endpoint also supports TLS client authentication, which can be used to create sophisticated authentication and authorization structures easily.
 The intention is to have the TLS endpoint exposed to the inner application (your **backend**) and to have the WS endpoint exposed to your end users via a reverse proxy like nginx (which also serves the files for your **frontend**) which further separates TLS termination away from `autobahnkreuz` to your cloud provider/environment. The separation between TLS for internal usage and WS for external usage also yields a better privilege separation and therefore improves application security.
 
-## Logging Configuration
+### Logging Configuration
 Configuration of the `autobahnkreuz` Logger is supported by setting following environment variables:
 
-`SERVICE_LOGFORMAT`
+#### `SERVICE_LOGFORMAT`
 
 This allows setting the formatting of the Logger out of a set of predefined Formats:
 
@@ -82,15 +82,15 @@ This allows setting the formatting of the Logger out of a set of predefined Form
 
 Will default to `human` if none is set, and exit if the set value is not recognized.
 
-`SERVICE_LOGLEVEL`
+#### `SERVICE_LOGLEVEL`
 
-This allows setting the depth which the Logger will display at maximum. Values are defined as: 
+This allows setting the depth which the Logger will display at maximum. Values are defined as:
 
-`CRITICAL`  
-`ERROR`  
-`WARN`  
-`INFO`  
-`DEBUG`  
+- `CRITICAL`
+- `ERROR`  
+- `WARN`  
+- `INFO`  
+- `DEBUG`  
 
 If no variable is set or the value is invalid, `autobahnkreuz` will default to `INFO`.
 
