@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -42,6 +43,7 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 	empty := wamp.Dict{}
 	authid := wamp.OptionString(details, "authid")
 	if authid == "" {
+		metrics.IncrementAuth("DynamicTicketAuthenticator", false)
 		return nil, errors.New("wamp.error.empty-auth-id")
 	}
 
@@ -52,6 +54,7 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 		Extra:      wamp.Dict{},
 	})
 	if err != nil {
+		metrics.IncrementAuth("DynamicTicketAuthenticator", false)
 		return nil, err
 	}
 
@@ -59,11 +62,13 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 	// A timeout of 5 seconds should be enough for slow clients...
 	msg, err := wamp.RecvTimeout(client, 5*time.Second)
 	if err != nil {
+		metrics.IncrementAuth("DynamicTicketAuthenticator", false)
 		return nil, err
 	}
 	authRsp, ok := msg.(*wamp.Authenticate)
 	if !ok {
 		util.Logger.Warningf("Protocol violation from %v: %v", client, msg.MessageType())
+		metrics.IncrementAuth("DynamicTicketAuthenticator", false)
 		return nil, errors.New(string(wamp.ErrProtocolViolation))
 	}
 
@@ -83,14 +88,17 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 		castErr, ok := err.(superClient.RPCError)
 
 		if !ok {
+			metrics.IncrementAuth("DynamicTicketAuthenticator", false)
 			return nil, errors.New("wamp.error.internal-error")
 		}
 
+		metrics.IncrementAuth("DynamicTicketAuthenticator", false)
 		return nil, errors.New(string(castErr.Err.Error))
 	}
 
 	welcome, err := a.FetchAndFilterAuthRoles(authid)
 	if err != nil {
+		metrics.IncrementAuth("DynamicTicketAuthenticator", false)
 		return nil, err
 	}
 	if a.AllowResumeToken && wamp.OptionFlag(authRsp.Extra, "generate-token") {
@@ -105,5 +113,7 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 			util.Logger.Warningf("Failed to generate token: %v", err)
 		}
 	}
+
+	metrics.IncrementAuth("DynamicTicketAuthenticator", true)
 	return welcome, nil
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -95,6 +96,7 @@ func (r *ResumeAuthenticator) createNewToken(_ context.Context, args wamp.List, 
 func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, client wamp.Peer) (*wamp.Welcome, error) {
 	authid := wamp.OptionString(details, "authid")
 	if authid != "resume" {
+		metrics.IncrementAuth("ResumeAuthenticator", false)
 		return nil, errors.New("wamp.error.wrong-auth-id")
 	}
 
@@ -105,6 +107,7 @@ func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 		Extra:      wamp.Dict{},
 	})
 	if err != nil {
+		metrics.IncrementAuth("ResumeAuthenticator", false)
 		return nil, err
 	}
 
@@ -112,11 +115,13 @@ func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 	// A timeout of 5 seconds should be enough for slow clients...
 	msg, err := wamp.RecvTimeout(client, 5*time.Second)
 	if err != nil {
+		metrics.IncrementAuth("ResumeAuthenticator", false)
 		return nil, err
 	}
 	authRsp, ok := msg.(*wamp.Authenticate)
 	if !ok {
 		util.Logger.Warningf("Protocol violation from %v: %v", client, msg.MessageType())
+		metrics.IncrementAuth("ResumeAuthenticator", false)
 		return nil, errors.New(string(wamp.ErrProtocolViolation))
 	}
 
@@ -125,6 +130,7 @@ func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 	delete(r.Tokens, token)
 
 	if !ok || time.Now().After(tokenObj.ExpireDate) {
+		metrics.IncrementAuth("ResumeAuthenticator", false)
 		return nil, errors.New("wamp.error.invalid-token")
 	}
 
@@ -136,10 +142,13 @@ func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 
 	welcome, err := r.FetchAndFilterAuthRoles(authid)
 	if err != nil {
+		metrics.IncrementAuth("ResumeAuthenticator", false)
 		return nil, err
 	}
 	x, _ := wamp.AsDict(welcome.Details["authextra"])
 	x["resume-token"] = newTokenRes.Args[0]
 	welcome.Details["authextra"] = x
+
+	metrics.IncrementAuth("ResumeAuthenticator", true)
 	return welcome, nil
 }

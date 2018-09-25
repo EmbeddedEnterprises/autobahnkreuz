@@ -24,8 +24,13 @@ type metricGeneral struct {
 }
 
 type metricAuthentication struct {
-	Succeded *uint32
-	Rejected *uint32
+	Succeded *uint64
+	Rejected *uint64
+}
+
+type displayAuthentication struct {
+	Succeded uint64
+	Rejected uint64
 }
 
 type displayGeneral struct {
@@ -33,7 +38,7 @@ type displayGeneral struct {
 	OutMessageCount       uint64
 	InTrafficBytesTotal   uint64
 	OutTrafficBytesTotal  uint64
-	Authentication        map[string]metricAuthentication
+	Authentication        map[string]displayAuthentication
 	AuthRolesClients      map[string]uint64
 	SuccededAuthorization uint64
 	RejectedAuthorization uint64
@@ -74,7 +79,7 @@ func metricToJSON(w http.ResponseWriter, r *http.Request) {
 		util.Logger.Warning("Metrics encounter troubles while converting: %v", err)
 		return
 	}
-	content, err := json.MarshalIndent(disMtr, "", "\t")
+	content, err := json.MarshalIndent(disMtr, "", "  ")
 	if err != nil {
 		util.Logger.Warning("Metrics encounter troubles while marshaling: %v", err)
 		return
@@ -104,6 +109,32 @@ func ConditionalIncrement(permit bool) {
 	}
 }
 
+// IncrementAuth atomic increases the counter of a certain authentication method `name` depended on if the authentication succeded or not
+func IncrementAuth(name string, succeded bool) {
+	var amt metricAuthentication
+	curamt, inserted := MetricGlobal.Authentication.GetOrInsert(name, &amt)
+	mtrA := ((curamt).(*metricAuthentication))
+	if inserted {
+		mtrA.Succeded = new(uint64)
+		mtrA.Rejected = new(uint64)
+	}
+	if succeded {
+		atomic.AddUint64(mtrA.Succeded, 1)
+	} else {
+		atomic.AddUint64(mtrA.Rejected, 1)
+	}
+}
+
+// IncrementRoles increments every given key by 1
+func IncrementRoles(roles []string) {
+	for k := range roles {
+		var amt uint64
+		curamt, _ := MetricGlobal.AuthRolesClients.GetOrInsert(k, &amt)
+		val := (curamt).(*uint64)
+		atomic.AddUint64(val, 1)
+	}
+}
+
 func processMtr() (disMtr displayGeneral, err error) {
 	// Setting all single valued fields
 	disMtr.InMessageCount = *MetricGlobal.InMessageCount
@@ -115,7 +146,7 @@ func processMtr() (disMtr displayGeneral, err error) {
 
 	// initialize maps
 	disMtr.AuthRolesClients = make(map[string]uint64)
-	disMtr.Authentication = make(map[string]metricAuthentication)
+	disMtr.Authentication = make(map[string]displayAuthentication)
 
 	// iterating over map
 	for k := range MetricGlobal.AuthRolesClients.Iter() {
@@ -123,7 +154,10 @@ func processMtr() (disMtr displayGeneral, err error) {
 		disMtr.AuthRolesClients[(k.Key).(string)] = *((k.Value).(*uint64))
 	}
 	for k := range MetricGlobal.Authentication.Iter() {
-		disMtr.Authentication[(k.Key).(string)] = *((k.Value).(*metricAuthentication))
+		var amt displayAuthentication
+		amt.Rejected = *((k.Value).(*metricAuthentication)).Rejected
+		amt.Succeded = *((k.Value).(*metricAuthentication)).Succeded
+		disMtr.Authentication[(k.Key).(string)] = amt
 	}
 
 	return
