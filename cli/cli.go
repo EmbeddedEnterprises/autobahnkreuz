@@ -55,6 +55,8 @@ type CLIParameters struct {
 	UpstreamGetAuthRolesFunc string
 	ReservedAuthRole         []string
 	EnableResumeToken        bool
+	EnableMetrics            bool
+	MetricPort               uint16
 
 	EnableAnonymousAuth bool
 	AnonymousAuthRole   string
@@ -122,6 +124,8 @@ func ParseCLI() CLIParameters {
 	cliTicketRoleUpstream := flag.String("ticket-get-role-func", "", "Which WAMP RPC to call to resolve authid to authrole/authextra")
 	cliExcludeAuthRoles := flag.StringSlice("exclude-auth-role", nil, "Authentication roles to exclude from ticket authentication")
 	cliEnableResumeToken := flag.Bool("enable-resume-token", true, "Whether to allow ticket authentication to have a keep-me-logged-in token.")
+	cliEnableMetricRecord := flag.Bool("enable-metrics", false, "Whether to expose the recorded metrics")
+	cliMetricPort := flag.Uint16("metric-port", 7070, "Which port shall be used to expose the metrics api")
 
 	// Unencrypted endpoint
 	cliEnableWS := flag.Bool("enable-ws", true, "Enable unencrypted WebSocket endpoint")
@@ -159,6 +163,8 @@ func ParseCLI() CLIParameters {
 		EnableAuthorizer:         *cliEnableAuthorizer,
 		TrustedAuthRoles:         *cliTrustAuthRoles,
 		UpstreamAuthorizer:       *cliUpstreamAuthorizer,
+		EnableMetrics:            *cliEnableMetricRecord,
+		MetricPort:               *cliMetricPort,
 
 		EnableFeatureAuthorizer:          *cliEnableFeatureAuthorizer,
 		UpstreamFeatureAuthorizerMatrix:  *cliUpstreamFeatureAuthorizerMatrix,

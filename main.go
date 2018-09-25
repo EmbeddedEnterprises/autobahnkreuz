@@ -15,6 +15,7 @@ import (
 	"github.com/EmbeddedEnterprises/autobahnkreuz/auth"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/filter"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -255,6 +256,13 @@ func main() {
 	util.Logger.Debug("Interconnect startup")
 	config := cli.ParseCLI()
 
+	// starting up metrics
+	metrics.Init(config.MetricPort, config.EnableMetrics, false)
+	if err != nil {
+		util.Logger.Criticalf("Failed to start metrics: %v", err)
+		os.Exit(util.ExitService)
+	}
+
 	routerConfig, initers := createRouterConfig(config)
 
 	util.Router, err = router.NewRouter(routerConfig, nil)
@@ -280,6 +288,7 @@ func main() {
 		util.Logger.Criticalf("Failed to register ping function!")
 		os.Exit(1)
 	}
+
 	util.Logger.Info("Router started, local client connected.")
 
 	// Wait for SIGINT (CTRL-c), then close server and exit.
