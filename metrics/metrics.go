@@ -24,8 +24,19 @@ type metricGeneral struct {
 }
 
 type metricAuthentication struct {
-	succeded *uint32
-	rejected *uint32
+	Succeded *uint32
+	Rejected *uint32
+}
+
+type displayGeneral struct {
+	InMessageCount        uint64
+	OutMessageCount       uint64
+	InTrafficBytesTotal   uint64
+	OutTrafficBytesTotal  uint64
+	Authentication        map[string]metricAuthentication
+	AuthRolesClients      map[string]uint64
+	SuccededAuthorization uint64
+	RejectedAuthorization uint64
 }
 
 // MetricGlobal is intended to be used as an quick acccess way to increase and decrease simple values such as `in/outMessageCount` and `..Authorization`
@@ -38,6 +49,7 @@ func Init(port uint16, expose bool, tls bool) {
 	if expose {
 		go startAPI(port)
 	}
+	// Creating these types has almost no impact on startup so this is not dependent on expose
 	MetricGlobal = &metricGeneral{
 		InMessageCount:        new(uint64),
 		OutMessageCount:       new(uint64),
@@ -57,7 +69,12 @@ func startAPI(port uint16) {
 
 // metricToJSON creates raw view of current data of MetricGlobal
 func metricToJSON(w http.ResponseWriter, r *http.Request) {
-	content, err := json.MarshalIndent(MetricGlobal, "", "\t")
+	disMtr, err := processMtr()
+	if err != nil {
+		util.Logger.Warning("Metrics encounter troubles while converting: %v", err)
+		return
+	}
+	content, err := json.MarshalIndent(disMtr, "", "\t")
 	if err != nil {
 		util.Logger.Warning("Metrics encounter troubles while marshaling: %v", err)
 		return
@@ -85,4 +102,29 @@ func ConditionalIncrement(permit bool) {
 	} else {
 		IncrementAtomic(MetricGlobal.RejectedAuthorization)
 	}
+}
+
+func processMtr() (disMtr displayGeneral, err error) {
+	// Setting all single valued fields
+	disMtr.InMessageCount = *MetricGlobal.InMessageCount
+	disMtr.OutMessageCount = *MetricGlobal.OutMessageCount
+	disMtr.RejectedAuthorization = *MetricGlobal.RejectedAuthorization
+	disMtr.SuccededAuthorization = *MetricGlobal.SuccededAuthorization
+	disMtr.InTrafficBytesTotal = *MetricGlobal.InTrafficBytesTotal
+	disMtr.OutTrafficBytesTotal = *MetricGlobal.OutTrafficBytesTotal
+
+	// initialize maps
+	disMtr.AuthRolesClients = make(map[string]uint64)
+	disMtr.Authentication = make(map[string]metricAuthentication)
+
+	// iterating over map
+	for k := range MetricGlobal.AuthRolesClients.Iter() {
+		util.Logger.Debugf("Map contains key value: %s \t %u", (k.Key).(string), *((k.Value).(*uint64)))
+		disMtr.AuthRolesClients[(k.Key).(string)] = *((k.Value).(*uint64))
+	}
+	for k := range MetricGlobal.Authentication.Iter() {
+		disMtr.Authentication[(k.Key).(string)] = *((k.Value).(*metricAuthentication))
+	}
+
+	return
 }
