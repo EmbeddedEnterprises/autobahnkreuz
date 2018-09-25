@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 
+	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -30,8 +31,10 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 	isTrustedAuthRole := roles.checkTrustedAuthRoles(a.TrustedAuthRoles)
 
 	if isTrustedAuthRole {
+		metrics.IncrementAtomic(metrics.MetricGlobal.SuccededAuthorization)
 		return true, nil
 	}
+	metrics.IncrementAtomic(metrics.MetricGlobal.RejectedAuthorization)
 
 	msgType := ""
 	uri := wamp.URI("")
@@ -54,7 +57,7 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 		return true, nil
 	}
 
-	//util.Logger.Debugf("Authorizing %v on %v for roles %v", msgType, uri, roles)
+	// util.Logger.Debugf("Authorizing %v on %v for roles %v", msgType, uri, roles)
 
 	ctx := context.Background()
 	empty := wamp.Dict{}
