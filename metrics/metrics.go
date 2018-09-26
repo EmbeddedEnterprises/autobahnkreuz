@@ -12,7 +12,7 @@ import (
 
 // ******************* structs
 
-type metricGeneral struct {
+type MetricGeneral struct {
 	InMessageCount        *uint64
 	OutMessageCount       *uint64
 	InTrafficBytesTotal   *uint64
@@ -45,7 +45,7 @@ type displayGeneral struct {
 }
 
 // MetricGlobal is intended to be used as an quick acccess way to increase and decrease simple values such as `in/outMessageCount` and `..Authorization`
-var MetricGlobal = &metricGeneral{}
+var MetricGlobal = &MetricGeneral{}
 
 // Init offers initialization for metric api
 func Init(port uint16, expose bool, tls bool) {
@@ -55,7 +55,7 @@ func Init(port uint16, expose bool, tls bool) {
 		go startAPI(port)
 	}
 	// Creating these types has almost no impact on startup so this is not dependent on expose
-	MetricGlobal = &metricGeneral{
+	MetricGlobal = &MetricGeneral{
 		InMessageCount:        new(uint64),
 		OutMessageCount:       new(uint64),
 		InTrafficBytesTotal:   new(uint64),
@@ -133,6 +133,14 @@ func IncrementRoles(roles []string) {
 		val := (curamt).(*uint64)
 		atomic.AddUint64(val, 1)
 	}
+}
+
+func SendHandler() {
+	IncrementAtomic(MetricGlobal.OutMessageCount)
+}
+
+func RecvHandler() {
+	IncrementAtomic(MetricGlobal.InMessageCount)
 }
 
 func processMtr() (disMtr displayGeneral, err error) {

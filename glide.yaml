@@ -2,6 +2,6 @@ package: github.com/EmbeddedEnterprises/autobahnkreuz
 import:
 - package: github.com/gammazero/nexus
   version: master
-  repo: https://github.com/EmbeddedEnterprises/nexus.git
+  repo: https://github.com/jwuensche/nexus
   vcs: git
 - package: github.com/cornelk/hashmap

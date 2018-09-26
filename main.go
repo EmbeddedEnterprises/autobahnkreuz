@@ -238,6 +238,8 @@ func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 	srv := router.NewWebsocketServer(*nxr)
 	srv.SetConfig(transport.WebsocketConfig{
 		EnableRequestCapture: true,
+		SendCallback:         metrics.SendHandler,
+		RecvCallback:         metrics.RecvHandler,
 	})
 
 	srv.KeepAlive = 5 * time.Second
