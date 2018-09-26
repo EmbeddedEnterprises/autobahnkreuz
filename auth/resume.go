@@ -11,6 +11,7 @@ import (
 	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
+	"github.com/deckarep/golang-set"
 	"github.com/gammazero/nexus/client"
 	"github.com/gammazero/nexus/wamp"
 )
