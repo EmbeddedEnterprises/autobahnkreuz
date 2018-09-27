@@ -235,16 +235,18 @@ func runWSEndpoint(websocketServer *router.WebsocketServer, config cli.CLIParame
 
 func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 	// Create and run server.
-	srv := router.NewWebsocketServer(*nxr)
+	srv := router.NewWebsocketServer(*nxr, metrics.SendMsgLenHandler, metrics.RecvMsgLenHandler)
 	srv.SetConfig(transport.WebsocketConfig{
 		EnableRequestCapture: true,
 		SendCallback:         metrics.SendHandler,
 		RecvCallback:         metrics.RecvHandler,
+		InMsgLenCallback:     metrics.RecvMsgLenHandler,
+		OutMsgLenCallback:    metrics.SendMsgLenHandler,
 	})
 
 	srv.KeepAlive = 5 * time.Second
 
-	// Disable CORS, since we're running behind a reverse proxy anyway
+	// Disable CORS, since we're running behind a reverse proxy anywayW
 	srv.Upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}

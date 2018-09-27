@@ -100,6 +100,10 @@ func IncrementAtomic(value *uint64) {
 	atomic.AddUint64(value, 1)
 }
 
+func IncreaseAtomic(value *uint64, diff uint64) {
+	atomic.AddUint64(value, 1)
+}
+
 // ConditionalIncrement is only used in combination with Succeded or Rejected authorization so no extra catch there
 func ConditionalIncrement(permit bool) {
 	if permit {
@@ -112,9 +116,11 @@ func ConditionalIncrement(permit bool) {
 // IncrementAuth atomic increases the counter of a certain authentication method `name` depended on if the authentication succeded or not
 func IncrementAuth(name string, succeded bool) {
 	var amt metricAuthentication
-	curamt, inserted := MetricGlobal.Authentication.GetOrInsert(name, &amt)
+	curamt, loaded := MetricGlobal.Authentication.GetOrInsert(name, &amt)
 	mtrA := ((curamt).(*metricAuthentication))
-	if inserted {
+	util.Logger.Debugf("Authentication Method registered: %s", name)
+	if !loaded {
+		util.Logger.Debugf("Authentication Values created for %s", name)
 		mtrA.Succeded = new(uint64)
 		mtrA.Rejected = new(uint64)
 	}
@@ -136,11 +142,21 @@ func IncrementRoles(roles []string) {
 }
 
 func SendHandler() {
+	util.Logger.Debug("SendHandler ping")
 	IncrementAtomic(MetricGlobal.OutMessageCount)
 }
 
 func RecvHandler() {
+	util.Logger.Debug("RecvHandler ping")
 	IncrementAtomic(MetricGlobal.InMessageCount)
+}
+
+func RecvMsgLenHandler(len uint64) {
+	IncreaseAtomic(MetricGlobal.InTrafficBytesTotal, len)
+}
+
+func SendMsgLenHandler(len uint64) {
+	IncreaseAtomic(MetricGlobal.OutTrafficBytesTotal, len)
 }
 
 func processMtr() (disMtr displayGeneral, err error) {
@@ -163,8 +179,9 @@ func processMtr() (disMtr displayGeneral, err error) {
 	}
 	for k := range MetricGlobal.Authentication.Iter() {
 		var amt displayAuthentication
-		amt.Rejected = *((k.Value).(*metricAuthentication)).Rejected
-		amt.Succeded = *((k.Value).(*metricAuthentication)).Succeded
+		// util.Logger.Debug(*(k.Value).(*metricAuthentication))
+		amt.Rejected = *((k.Value).(*metricAuthentication).Rejected)
+		amt.Succeded = *((k.Value).(*metricAuthentication).Succeded)
 		disMtr.Authentication[(k.Key).(string)] = amt
 	}
 
