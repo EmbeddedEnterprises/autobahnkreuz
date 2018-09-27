@@ -101,7 +101,7 @@ func IncrementAtomic(value *uint64) {
 }
 
 func IncreaseAtomic(value *uint64, diff uint64) {
-	atomic.AddUint64(value, 1)
+	atomic.AddUint64(value, diff)
 }
 
 // ConditionalIncrement is only used in combination with Succeded or Rejected authorization so no extra catch there
@@ -152,10 +152,14 @@ func RecvHandler() {
 }
 
 func RecvMsgLenHandler(len uint64) {
+	util.Logger.Debugf("Received message of length: %d", len)
+	util.Logger.Debugf("Current total before adding: %d", *MetricGlobal.InTrafficBytesTotal)
 	IncreaseAtomic(MetricGlobal.InTrafficBytesTotal, len)
+	util.Logger.Debugf("Current total after adding: %d", *MetricGlobal.InTrafficBytesTotal)
 }
 
 func SendMsgLenHandler(len uint64) {
+	util.Logger.Debugf("Send message of length: %d", len)
 	IncreaseAtomic(MetricGlobal.OutTrafficBytesTotal, len)
 }
 
@@ -174,7 +178,7 @@ func processMtr() (disMtr displayGeneral, err error) {
 
 	// iterating over map
 	for k := range MetricGlobal.AuthRolesClients.Iter() {
-		util.Logger.Debugf("Map contains key value: %s \t %u", (k.Key).(string), *((k.Value).(*uint64)))
+		util.Logger.Debugf("Map contains key value: %s \t %d", (k.Key).(string), *((k.Value).(*uint64)))
 		disMtr.AuthRolesClients[(k.Key).(string)] = *((k.Value).(*uint64))
 	}
 	for k := range MetricGlobal.Authentication.Iter() {
