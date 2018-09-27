@@ -1,5 +1,5 @@
-hash: d35607f0e2c441b7f4f0ddaf46678ef4bc3122efc13949452709fe89ae6861c5
-updated: 2018-09-24T15:41:51.426947777+02:00
+hash: 0c1d55f5cb17398d2f76094bc5f47051ec0c4dbeda37ff0044589cc88e1ad9c5
+updated: 2018-09-27T13:57:14.125161821+02:00
 imports:
 - name: github.com/cornelk/hashmap
   version: a8997b175649bec70bbf8f582622a4e2b18b5fd1
@@ -8,8 +8,8 @@ imports:
 - name: github.com/deckarep/golang-set
   version: cbaa98ba5575e67703b32b4b19f73c91f3c4159e
 - name: github.com/gammazero/nexus
-  version: 28bab3b2824666b3b75aefdd94ec37dd7435f9e2
-  repo: https://github.com/EmbeddedEnterprises/nexus.git
+  version: 62c3bd18c43764c4019ed14490abe52b39757a95
+  repo: https://github.com/jwuensche/nexus
   vcs: git
   subpackages:
   - client
@@ -21,7 +21,7 @@ imports:
   - wamp
   - wamp/crsign
 - name: github.com/gorilla/websocket
-  version: 66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d
+  version: 3130e8d3f1986de7dc3fd86255f4ce9618677508
 - name: github.com/op/go-logging
   version: 970db520ece77730c7e4724c61121037378659d9
 - name: github.com/spf13/pflag
