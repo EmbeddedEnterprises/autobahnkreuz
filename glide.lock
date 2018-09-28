@@ -1,5 +1,5 @@
 hash: 0c1d55f5cb17398d2f76094bc5f47051ec0c4dbeda37ff0044589cc88e1ad9c5
-updated: 2018-09-27T18:14:52.431221942+02:00
+updated: 2018-09-27T23:53:24.392665261+02:00
 imports:
 - name: github.com/cornelk/hashmap
   version: a8997b175649bec70bbf8f582622a4e2b18b5fd1
@@ -8,7 +8,7 @@ imports:
 - name: github.com/deckarep/golang-set
   version: cbaa98ba5575e67703b32b4b19f73c91f3c4159e
 - name: github.com/gammazero/nexus
-  version: a2fdb89be7760ec958d50408bc06f7cee149d7a7
+  version: 42bc5978ac4cc42b160a065be7c9dd8b126ef052
   repo: https://github.com/jwuensche/nexus
   vcs: git
   subpackages:

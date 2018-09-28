@@ -34,10 +34,10 @@ type displayAuthentication struct {
 }
 
 type displayGeneral struct {
-	InMessageCount        uint64
-	OutMessageCount       uint64
-	InTrafficBytesTotal   uint64
-	OutTrafficBytesTotal  uint64
+	RecvMessageCount      uint64
+	SendMessageCount      uint64
+	RecvTrafficBytesTotal uint64
+	SendTrafficBytesTotal uint64
 	Authentication        map[string]displayAuthentication
 	AuthRolesClients      map[string]uint64
 	SuccededAuthorization uint64
@@ -147,30 +147,30 @@ func SendHandler() {
 }
 
 func RecvHandler() {
-	util.Logger.Debug("RecvHandler ping")
+	// util.Logger.Debug("RecvHandler ping")
 	IncrementAtomic(MetricGlobal.InMessageCount)
 }
 
 func RecvMsgLenHandler(len uint64) {
-	util.Logger.Debugf("Received message of length: %d", len)
-	util.Logger.Debugf("Current total before adding: %d", *MetricGlobal.InTrafficBytesTotal)
+	// util.Logger.Debugf("Received message of length: %d", len)
+	// util.Logger.Debugf("Current total before adding: %d", *MetricGlobal.InTrafficBytesTotal)
 	IncreaseAtomic(MetricGlobal.InTrafficBytesTotal, len)
-	util.Logger.Debugf("Current total after adding: %d", *MetricGlobal.InTrafficBytesTotal)
+	// util.Logger.Debugf("Current total after adding: %d", *MetricGlobal.InTrafficBytesTotal)
 }
 
 func SendMsgLenHandler(len uint64) {
-	util.Logger.Debugf("Send message of length: %d", len)
+	// util.Logger.Debugf("Send message of length: %d", len)
 	IncreaseAtomic(MetricGlobal.OutTrafficBytesTotal, len)
 }
 
 func processMtr() (disMtr displayGeneral, err error) {
 	// Setting all single valued fields
-	disMtr.InMessageCount = *MetricGlobal.InMessageCount
-	disMtr.OutMessageCount = *MetricGlobal.OutMessageCount
+	disMtr.RecvMessageCount = *MetricGlobal.InMessageCount
+	disMtr.SendMessageCount = *MetricGlobal.OutMessageCount
 	disMtr.RejectedAuthorization = *MetricGlobal.RejectedAuthorization
 	disMtr.SuccededAuthorization = *MetricGlobal.SuccededAuthorization
-	disMtr.InTrafficBytesTotal = *MetricGlobal.InTrafficBytesTotal
-	disMtr.OutTrafficBytesTotal = *MetricGlobal.OutTrafficBytesTotal
+	disMtr.RecvTrafficBytesTotal = *MetricGlobal.InTrafficBytesTotal
+	disMtr.SendTrafficBytesTotal = *MetricGlobal.OutTrafficBytesTotal
 
 	// initialize maps
 	disMtr.AuthRolesClients = make(map[string]uint64)
@@ -183,7 +183,6 @@ func processMtr() (disMtr displayGeneral, err error) {
 	}
 	for k := range MetricGlobal.Authentication.Iter() {
 		var amt displayAuthentication
-		// util.Logger.Debug(*(k.Value).(*metricAuthentication))
 		amt.Rejected = *((k.Value).(*metricAuthentication).Rejected)
 		amt.Succeded = *((k.Value).(*metricAuthentication).Succeded)
 		disMtr.Authentication[(k.Key).(string)] = amt

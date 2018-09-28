@@ -235,7 +235,7 @@ func runWSEndpoint(websocketServer *router.WebsocketServer, config cli.CLIParame
 
 func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 	// Create and run server.
-	srv := router.NewWebsocketServer(*nxr, metrics.SendMsgLenHandler, metrics.RecvMsgLenHandler)
+	srv := router.NewWebsocketServer(*nxr, metrics.SendMsgLenHandler, metrics.RecvMsgLenHandler, metrics.SendHandler, metrics.RecvHandler)
 	srv.SetConfig(transport.WebsocketConfig{
 		EnableRequestCapture: true,
 		SendCallback:         metrics.SendHandler,
