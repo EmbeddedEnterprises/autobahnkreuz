@@ -13,35 +13,35 @@ import (
 // ******************* structs
 
 type MetricGeneral struct {
-	InMessageCount        *uint64
-	OutMessageCount       *uint64
-	InTrafficBytesTotal   *uint64
-	OutTrafficBytesTotal  *uint64
-	Authentication        *hashmap.HashMap
-	AuthRolesClients      *hashmap.HashMap
-	SuccededAuthorization *uint64
-	RejectedAuthorization *uint64
+	InMessageCount         *uint64
+	OutMessageCount        *uint64
+	InTrafficBytesTotal    *uint64
+	OutTrafficBytesTotal   *uint64
+	Authentication         *hashmap.HashMap
+	AuthRolesClients       *hashmap.HashMap
+	SucceededAuthorization *uint64
+	RejectedAuthorization  *uint64
 }
 
 type metricAuthentication struct {
-	Succeded *uint64
-	Rejected *uint64
+	Succeeded *uint64
+	Rejected  *uint64
 }
 
 type displayAuthentication struct {
-	Succeded uint64
-	Rejected uint64
+	Succeeded uint64
+	Rejected  uint64
 }
 
 type displayGeneral struct {
-	RecvMessageCount      uint64
-	SendMessageCount      uint64
-	RecvTrafficBytesTotal uint64
-	SendTrafficBytesTotal uint64
-	Authentication        map[string]displayAuthentication
-	AuthRolesClients      map[string]uint64
-	SuccededAuthorization uint64
-	RejectedAuthorization uint64
+	RecvMessageCount       uint64
+	SendMessageCount       uint64
+	RecvTrafficBytesTotal  uint64
+	SendTrafficBytesTotal  uint64
+	Authentication         map[string]displayAuthentication
+	AuthRolesClients       map[string]uint64
+	SucceededAuthorization uint64
+	RejectedAuthorization  uint64
 }
 
 // MetricGlobal is intended to be used as an quick acccess way to increase and decrease simple values such as `in/outMessageCount` and `..Authorization`
@@ -56,14 +56,14 @@ func Init(port uint16, expose bool, tls bool) {
 	}
 	// Creating these types has almost no impact on startup so this is not dependent on expose
 	MetricGlobal = &MetricGeneral{
-		InMessageCount:        new(uint64),
-		OutMessageCount:       new(uint64),
-		InTrafficBytesTotal:   new(uint64),
-		AuthRolesClients:      hashmap.New(128),
-		Authentication:        hashmap.New(128),
-		OutTrafficBytesTotal:  new(uint64),
-		SuccededAuthorization: new(uint64),
-		RejectedAuthorization: new(uint64),
+		InMessageCount:         new(uint64),
+		OutMessageCount:        new(uint64),
+		InTrafficBytesTotal:    new(uint64),
+		AuthRolesClients:       hashmap.New(128),
+		Authentication:         hashmap.New(128),
+		OutTrafficBytesTotal:   new(uint64),
+		SucceededAuthorization: new(uint64),
+		RejectedAuthorization:  new(uint64),
 	}
 }
 
@@ -104,28 +104,28 @@ func IncreaseAtomic(value *uint64, diff uint64) {
 	atomic.AddUint64(value, diff)
 }
 
-// ConditionalIncrement is only used in combination with Succeded or Rejected authorization so no extra catch there
+// ConditionalIncrement is only used in combination with Succeeded or Rejected authorization so no extra catch there
 func ConditionalIncrement(permit bool) {
 	if permit {
-		IncrementAtomic(MetricGlobal.SuccededAuthorization)
+		IncrementAtomic(MetricGlobal.SucceededAuthorization)
 	} else {
 		IncrementAtomic(MetricGlobal.RejectedAuthorization)
 	}
 }
 
-// IncrementAuth atomic increases the counter of a certain authentication method `name` depended on if the authentication succeded or not
-func IncrementAuth(name string, succeded bool) {
+// IncrementAuth atomic increases the counter of a certain authentication method `name` depended on if the authentication succeeded or not
+func IncrementAuth(name string, succeeded bool) {
 	var amt metricAuthentication
 	curamt, loaded := MetricGlobal.Authentication.GetOrInsert(name, &amt)
 	mtrA := ((curamt).(*metricAuthentication))
 	util.Logger.Debugf("Authentication Method registered: %s", name)
 	if !loaded {
 		util.Logger.Debugf("Authentication Values created for %s", name)
-		mtrA.Succeded = new(uint64)
+		mtrA.Succeeded = new(uint64)
 		mtrA.Rejected = new(uint64)
 	}
-	if succeded {
-		atomic.AddUint64(mtrA.Succeded, 1)
+	if succeeded {
+		atomic.AddUint64(mtrA.Succeeded, 1)
 	} else {
 		atomic.AddUint64(mtrA.Rejected, 1)
 	}
@@ -168,7 +168,7 @@ func processMtr() (disMtr displayGeneral, err error) {
 	disMtr.RecvMessageCount = *MetricGlobal.InMessageCount
 	disMtr.SendMessageCount = *MetricGlobal.OutMessageCount
 	disMtr.RejectedAuthorization = *MetricGlobal.RejectedAuthorization
-	disMtr.SuccededAuthorization = *MetricGlobal.SuccededAuthorization
+	disMtr.SucceededAuthorization = *MetricGlobal.SucceededAuthorization
 	disMtr.RecvTrafficBytesTotal = *MetricGlobal.InTrafficBytesTotal
 	disMtr.SendTrafficBytesTotal = *MetricGlobal.OutTrafficBytesTotal
 
@@ -184,7 +184,7 @@ func processMtr() (disMtr displayGeneral, err error) {
 	for k := range MetricGlobal.Authentication.Iter() {
 		var amt displayAuthentication
 		amt.Rejected = *((k.Value).(*metricAuthentication).Rejected)
-		amt.Succeded = *((k.Value).(*metricAuthentication).Succeded)
+		amt.Succeeded = *((k.Value).(*metricAuthentication).Succeeded)
 		disMtr.Authentication[(k.Key).(string)] = amt
 	}
 
