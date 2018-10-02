@@ -224,7 +224,7 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 	isTrustedAuthRole := roles.checkTrustedAuthRoles(this.TrustedAuthRoles)
 
 	if isTrustedAuthRole {
-		metrics.IncrementAtomic(metrics.MetricGlobal.SuccededAuthorization)
+		metrics.IncrementAtomic(metrics.MetricGlobal.SucceededAuthorization)
 		util.Logger.Infof("Call was from trusted auth role. Access granted.")
 		return true, nil
 	}
@@ -285,7 +285,7 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 		hasPermission := featureMatrix[featureURI][authRole]
 
 		if hasPermission {
-			metrics.IncrementAtomic(metrics.MetricGlobal.SuccededAuthorization)
+			metrics.IncrementAtomic(metrics.MetricGlobal.SucceededAuthorization)
 			return true, nil
 		}
 	}

@@ -31,7 +31,7 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 	isTrustedAuthRole := roles.checkTrustedAuthRoles(a.TrustedAuthRoles)
 
 	if isTrustedAuthRole {
-		metrics.IncrementAtomic(metrics.MetricGlobal.SuccededAuthorization)
+		metrics.IncrementAtomic(metrics.MetricGlobal.SucceededAuthorization)
 		return true, nil
 	}
 	metrics.IncrementAtomic(metrics.MetricGlobal.RejectedAuthorization)
