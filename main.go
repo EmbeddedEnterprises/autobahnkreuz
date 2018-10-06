@@ -16,6 +16,7 @@ import (
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/filter"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/ping"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -288,7 +289,7 @@ func main() {
 		util.Logger.Criticalf("Failed to connect local client: %v", err)
 		os.Exit(1)
 	}
-	if err := util.RegisterPing(util.LocalClient); err != nil {
+	if err := ping.RegisterPing(util.LocalClient); err != nil {
 		util.Logger.Criticalf("Failed to register ping function!")
 		os.Exit(1)
 	}

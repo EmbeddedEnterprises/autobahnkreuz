@@ -21,6 +21,7 @@ type MetricGeneral struct {
 	AuthRolesClients       *hashmap.HashMap
 	SucceededAuthorization *uint64
 	RejectedAuthorization  *uint64
+	PingAmount             *uint64
 }
 
 type metricAuthentication struct {
@@ -42,6 +43,7 @@ type displayGeneral struct {
 	AuthRolesClients       map[string]uint64
 	SucceededAuthorization uint64
 	RejectedAuthorization  uint64
+	PingAmount             uint64
 }
 
 // MetricGlobal is intended to be used as an quick acccess way to increase and decrease simple values such as `in/outMessageCount` and `..Authorization`
@@ -64,6 +66,7 @@ func Init(port uint16, expose bool, tls bool) {
 		OutTrafficBytesTotal:   new(uint64),
 		SucceededAuthorization: new(uint64),
 		RejectedAuthorization:  new(uint64),
+		PingAmount:             new(uint64),
 	}
 }
 
@@ -171,6 +174,7 @@ func processMtr() (disMtr displayGeneral, err error) {
 	disMtr.SucceededAuthorization = *MetricGlobal.SucceededAuthorization
 	disMtr.RecvTrafficBytesTotal = *MetricGlobal.InTrafficBytesTotal
 	disMtr.SendTrafficBytesTotal = *MetricGlobal.OutTrafficBytesTotal
+	disMtr.PingAmount = *MetricGlobal.PingAmount
 
 	// initialize maps
 	disMtr.AuthRolesClients = make(map[string]uint64)
