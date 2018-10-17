@@ -236,13 +236,10 @@ func runWSEndpoint(websocketServer *router.WebsocketServer, config cli.CLIParame
 
 func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 	// Create and run server.
-	srv := router.NewWebsocketServer(*nxr, metrics.SendMsgLenHandler, metrics.RecvMsgLenHandler, metrics.SendHandler, metrics.RecvHandler)
+	srv, mtrptr := router.NewWebsocketServer(*nxr)
+	metrics.MetricGlobal = mtrptr
 	srv.SetConfig(transport.WebsocketConfig{
 		EnableRequestCapture: true,
-		SendCallback:         metrics.SendHandler,
-		RecvCallback:         metrics.RecvHandler,
-		InMsgLenCallback:     metrics.RecvMsgLenHandler,
-		OutMsgLenCallback:    metrics.SendMsgLenHandler,
 	})
 
 	srv.KeepAlive = 5 * time.Second
@@ -261,8 +258,6 @@ func main() {
 	util.Logger.Debug("Interconnect startup")
 	config := cli.ParseCLI()
 
-	// starting up metrics
-	metrics.Init(config.MetricPort, config.EnableMetrics, false)
 	if err != nil {
 		util.Logger.Criticalf("Failed to start metrics: %v", err)
 		os.Exit(util.ExitService)

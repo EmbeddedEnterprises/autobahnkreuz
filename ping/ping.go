@@ -11,7 +11,7 @@ import (
 // Ping provides a simple keep-alive function for clients.
 func ping(_ context.Context, _ wamp.List, _, _ wamp.Dict) *client.InvokeResult {
 	// This function was introduced due to idle-timeouting connections from websockets.
-	metrics.IncrementAtomic(metrics.MetricGlobal.PingAmount)
+	metrics.MetricGlobal.IncrementAtomicUint64Key("PingAmount")
 	return &client.InvokeResult{}
 }
 

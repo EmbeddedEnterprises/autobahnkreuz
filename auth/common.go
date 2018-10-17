@@ -35,12 +35,12 @@ func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wam
 		authid,
 	}, empty, "")
 	if err != nil {
-		metrics.IncrementAtomic(metrics.MetricGlobal.RejectedAuthorization)
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 		util.Logger.Warningf("Failed to call `%s`: %v", s.UpstreamGetAuthRolesFunc, err)
 		return nil, errors.New("Unauthorized")
 	}
 	if len(result.Arguments) == 0 {
-		metrics.IncrementAtomic(metrics.MetricGlobal.RejectedAuthorization)
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 		util.Logger.Warningf("Upstream auth func returned no values")
 		return nil, errors.New("Unauthorized")
 	}
@@ -50,7 +50,7 @@ func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wam
 	userData, isDict := wamp.AsDict(result.Arguments[0])
 
 	if !isList && !isDict {
-		metrics.IncrementAtomic(metrics.MetricGlobal.RejectedAuthorization)
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 		util.Logger.Warningf("Upstream auth func returned no authroles")
 		return nil, errors.New("Unauthorized")
 	}
@@ -58,7 +58,7 @@ func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wam
 	if isDict {
 		authroles, isList = wamp.AsList(userData["authroles"])
 		if !isList {
-			metrics.IncrementAtomic(metrics.MetricGlobal.RejectedAuthorization)
+			metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 			util.Logger.Warningf("Upstream auth func returned no authroles in authextra")
 			return nil, errors.New("Unauthorized")
 		}

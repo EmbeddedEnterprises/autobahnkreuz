@@ -14,8 +14,7 @@ type AnonymousAuth struct {
 // Authenticate assigns an authrole and an authid to the given session.
 func (a AnonymousAuth) Authenticate(_ wamp.ID, _ wamp.Dict, _ wamp.Peer) (*wamp.Welcome, error) {
 	// increasing the count of the anonymous role in metrics
-	metrics.IncrementAtomicMap(metrics.MetricGlobal.AuthRolesClients, "anonymous")
-
+	metrics.IncrementAuth(metrics.Anonymous, true)
 	// Authenticate
 	return &wamp.Welcome{
 		Details: wamp.Dict{
