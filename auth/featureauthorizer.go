@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	mapset "github.com/deckarep/golang-set"
@@ -215,6 +216,7 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 	util.Logger.Debugf("Request: %v Session: %v", msg, sess)
 
 	if err != nil {
+		metrics.ConditionalIncrement(this.PermitDefault)
 		return this.PermitDefault, nil
 	}
 
@@ -222,11 +224,13 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 	isTrustedAuthRole := roles.checkTrustedAuthRoles(this.TrustedAuthRoles)
 
 	if isTrustedAuthRole {
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.SucceededAuthorization)
 		util.Logger.Infof("Call was from trusted auth role. Access granted.")
 		return true, nil
 	}
 
 	if this.FeatureMatrix == nil || this.FeatureMapping == nil {
+		metrics.ConditionalIncrement(this.PermitDefault)
 		util.Logger.Warningf("FeatureMatrix or FeatureMapping is not defined.")
 		util.Logger.Warningf("FeatureMapping: %v", this.FeatureMapping)
 		util.Logger.Warningf("FeatureMatrix: %v", this.FeatureMatrix)
@@ -271,6 +275,7 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 	}
 
 	if !isOkay {
+		metrics.ConditionalIncrement(this.PermitDefault)
 		return this.PermitDefault, nil
 	}
 
@@ -280,9 +285,11 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 		hasPermission := featureMatrix[featureURI][authRole]
 
 		if hasPermission {
+			metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.SucceededAuthorization)
 			return true, nil
 		}
 	}
 
+	metrics.ConditionalIncrement(this.PermitDefault)
 	return this.PermitDefault, nil
 }

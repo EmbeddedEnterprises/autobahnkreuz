@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -34,10 +35,12 @@ func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wam
 		authid,
 	}, empty, "")
 	if err != nil {
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 		util.Logger.Warningf("Failed to call `%s`: %v", s.UpstreamGetAuthRolesFunc, err)
 		return nil, errors.New("Unauthorized")
 	}
 	if len(result.Arguments) == 0 {
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 		util.Logger.Warningf("Upstream auth func returned no values")
 		return nil, errors.New("Unauthorized")
 	}
@@ -47,6 +50,7 @@ func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wam
 	userData, isDict := wamp.AsDict(result.Arguments[0])
 
 	if !isList && !isDict {
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 		util.Logger.Warningf("Upstream auth func returned no authroles")
 		return nil, errors.New("Unauthorized")
 	}
@@ -54,6 +58,7 @@ func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wam
 	if isDict {
 		authroles, isList = wamp.AsList(userData["authroles"])
 		if !isList {
+			metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 			util.Logger.Warningf("Upstream auth func returned no authroles in authextra")
 			return nil, errors.New("Unauthorized")
 		}
@@ -91,6 +96,7 @@ func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wam
 			welcomeDetails = dict
 		}
 	}
+
 	welcomeDetails["authid"] = authid
 	welcomeDetails["authrole"] = targetList
 	welcomeDetails["authextra"] = userData

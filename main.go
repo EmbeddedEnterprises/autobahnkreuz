@@ -15,6 +15,8 @@ import (
 	"github.com/EmbeddedEnterprises/autobahnkreuz/auth"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/filter"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/metrics"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/ping"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
 	"github.com/deckarep/golang-set"
@@ -234,14 +236,15 @@ func runWSEndpoint(websocketServer *router.WebsocketServer, config cli.CLIParame
 
 func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 	// Create and run server.
-	srv := router.NewWebsocketServer(*nxr)
+	srv, mtrptr := router.NewWebsocketServer(*nxr)
+	metrics.MetricGlobal = mtrptr
 	srv.SetConfig(transport.WebsocketConfig{
 		EnableRequestCapture: true,
 	})
 
 	srv.KeepAlive = 5 * time.Second
 
-	// Disable CORS, since we're running behind a reverse proxy anyway
+	// Disable CORS, since we're running behind a reverse proxy anywayW
 	srv.Upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
@@ -254,6 +257,11 @@ func main() {
 	util.Init()
 	util.Logger.Debug("Interconnect startup")
 	config := cli.ParseCLI()
+
+	if err != nil {
+		util.Logger.Criticalf("Failed to start metrics: %v", err)
+		os.Exit(util.ExitService)
+	}
 
 	routerConfig, initers := createRouterConfig(config)
 
@@ -276,10 +284,14 @@ func main() {
 		util.Logger.Criticalf("Failed to connect local client: %v", err)
 		os.Exit(1)
 	}
-	if err := util.RegisterPing(util.LocalClient); err != nil {
+	if err := ping.RegisterPing(util.LocalClient); err != nil {
 		util.Logger.Criticalf("Failed to register ping function!")
 		os.Exit(1)
 	}
+	if err := metrics.RegisterMetrics(util.LocalClient); err != nil {
+		util.Logger.Criticalf("Failed to register metrics function: %v", err)
+	}
+
 	util.Logger.Info("Router started, local client connected.")
 
 	// Wait for SIGINT (CTRL-c), then close server and exit.
