@@ -31,10 +31,10 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 	isTrustedAuthRole := roles.checkTrustedAuthRoles(a.TrustedAuthRoles)
 
 	if isTrustedAuthRole {
-		metrics.MetricGlobal.IncrementAtomicUint64Key("SucceededAuthorization")
+		metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.SucceededAuthorization)
 		return true, nil
 	}
-	metrics.MetricGlobal.IncrementAtomicUint64Key("RejectedAuthorization")
+	metrics.MetricGlobal.IncrementAtomicUint64Key(metrics.RejectedAuthorization)
 
 	msgType := ""
 	uri := wamp.URI("")

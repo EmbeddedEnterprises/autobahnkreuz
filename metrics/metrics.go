@@ -1,7 +1,12 @@
 package metrics
 
 import (
-	"github.com/gammazero/nexus/metrics"
+	"context"
+
+	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
+	"github.com/gammazero/nexus/client"
+	m "github.com/gammazero/nexus/metrics"
+	"github.com/gammazero/nexus/wamp"
 )
 
 const (
@@ -15,7 +20,21 @@ const (
 	Anonymous = "anonymous"
 )
 
-var MetricGlobal *metrics.MetricMap
+var MetricGlobal *m.MetricMap
+
+func RegisterMetrics(c *client.Client) (err error) {
+	err = c.Register("ee.metrics", metric, wamp.Dict{})
+	return
+}
+
+func metric(_ context.Context, _ wamp.List, _, _ wamp.Dict) (res *client.InvokeResult) {
+	mp, err := MetricGlobal.MetricMapToGoMap()
+	if err != nil {
+		util.Logger.Errorf("%v", err)
+	}
+	res = &client.InvokeResult{Args: wamp.List{mp}}
+	return
+}
 
 // ConditionalIncrement is only used in combination with Succeeded or Rejected authorization so no extra catch there
 func ConditionalIncrement(permit bool) {

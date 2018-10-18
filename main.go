@@ -288,6 +288,9 @@ func main() {
 		util.Logger.Criticalf("Failed to register ping function!")
 		os.Exit(1)
 	}
+	if err := metrics.RegisterMetrics(util.LocalClient); err != nil {
+		util.Logger.Criticalf("Failed to register metrics function: %v", err)
+	}
 
 	util.Logger.Info("Router started, local client connected.")
 
