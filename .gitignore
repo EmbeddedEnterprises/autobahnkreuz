@@ -6,3 +6,4 @@ vendor
 *.crt
 *.key
 *.sh
+.idea

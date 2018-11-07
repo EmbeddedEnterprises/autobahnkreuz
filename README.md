@@ -209,7 +209,7 @@ To reduce load on the authorization endpoint, a **fast-path** checking can be en
 
 - TBD.
 - This feature is **NOT** production ready at this time.
-- Find additional documentation [here](auth/feature.md)
+- Find additional documentation [here](authentication/feature.md)
 - When you want to use feature authorization, be sure to set `--enable-authorization=false` and `--enable-feature-authorization=true`
 
 | CLI Parameter                     | Type      | Default Value  | Description |

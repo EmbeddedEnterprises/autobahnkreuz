@@ -12,7 +12,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/EmbeddedEnterprises/autobahnkreuz/auth"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/authorization"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/authentication"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/filter"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
@@ -99,7 +100,7 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 
 	if config.EnableAnonymousAuth {
 		util.Logger.Infof("Enabling anonymous authentication, role: %v", config.AnonymousAuthRole)
-		realm.Authenticators = append(realm.Authenticators, auth.AnonymousAuth{
+		realm.Authenticators = append(realm.Authenticators, authentication.AnonymousAuth{
 			AuthRole: config.AnonymousAuthRole,
 		})
 	}
@@ -111,7 +112,7 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 
 	if config.EnableTicketAuth {
 		util.Logger.Infof("Enabling ticket auth, func: %v, roles: %v", config.UpstreamAuthFunc, config.UpstreamGetAuthRolesFunc)
-		authenticator, err := auth.NewDynamicTicket(config.UpstreamAuthFunc, config.UpstreamGetAuthRolesFunc, config.Realm, exclude, config.EnableResumeToken)
+		authenticator, err := authentication.NewDynamicTicket(config.UpstreamAuthFunc, config.UpstreamGetAuthRolesFunc, config.Realm, exclude, config.EnableResumeToken)
 		if err != nil {
 			util.Logger.Criticalf("Failed to create dynamic ticket authenticator: %v", err)
 			os.Exit(1)
@@ -121,7 +122,7 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 
 	if config.EnableResumeToken {
 		util.Logger.Infof("Enabling resume token auth, roles: %v", config.UpstreamGetAuthRolesFunc)
-		authenticator, err := auth.NewResumeAuthenticator(config.UpstreamGetAuthRolesFunc, config.Realm, exclude)
+		authenticator, err := authentication.NewResumeAuthenticator(config.UpstreamGetAuthRolesFunc, config.Realm, exclude)
 		if err != nil {
 			util.Logger.Criticalf("Failed to create resume authenticator: %v", err)
 		}
@@ -139,33 +140,42 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 		// If you use client.ConnectLocal, the client automagically gets the trusted auth role.
 		trustedAuthRoles.Add("trusted")
 
+		var authorizers []router.Authorizer
 		if config.EnableAuthorizer {
-			util.Logger.Infof("Enabling authorization, func: %v", config.UpstreamAuthorizer)
+			util.Logger.Infof("Enabling Dynamic Authorization, func: %v", config.UpstreamAuthorizer)
 
-			realm.Authorizer = auth.DynamicAuthorizer{
+			dynAuth := authorization.DynamicAuthorizer{
 				UpstreamAuthorizer: config.UpstreamAuthorizer,
 				TrustedAuthRoles:   trustedAuthRoles,
 				PermitDefault:      config.AuthorizeFailed == cli.PermitAction,
 			}
+
+			authorizers = append(authorizers, dynAuth)
 		} else if config.EnableFeatureAuthorizer {
 			util.Logger.Infof("Enabling Feature Authorization.")
-			util.Logger.Infof("Ensure, you really want to do this. Dynamic Authorization is not active.")
 
-			authRef := auth.NewFeatureAuthorizer(
+			authRef := authorization.NewFeatureAuthorizer(
 				config.AuthorizeFailed == cli.PermitAction,
 				config.UpstreamFeatureAuthorizerMatrix,
 				config.UpstreamFeatureAuthorizerMapping,
 				trustedAuthRoles,
 			)
 
-			realm.Authorizer = authRef
+			authorizers = append(authorizers, authRef)
 			initers = append(initers, authRef.Initialize)
 		}
+
+		multiAuthorizer := authorization.MultiAuthorizer{
+			Authorizer: authorizers,
+		}
+
+		realm.Authorizer = &multiAuthorizer;
+
 	}
 
 	if config.ListenTLS != nil && config.ListenTLS.ClientCertPolicy != cli.DisableClientAuthentication {
 		util.Logger.Infof("Enabling TLS client auth, %d valid client CAs", len(config.ListenTLS.ValidClientCAs))
-		realm.Authenticators = append(realm.Authenticators, auth.TLSAuth{
+		realm.Authenticators = append(realm.Authenticators, authentication.TLSAuth{
 			ValidClientCAs: config.ListenTLS.ValidClientCAs,
 		})
 	}
