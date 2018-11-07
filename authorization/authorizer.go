@@ -2,6 +2,7 @@ package authorization
 
 import (
 	"context"
+	"errors"
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
@@ -24,7 +25,7 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 	roles, err := extractAuthRoles(sess.Details["authrole"])
 
 	if err != nil {
-		return a.PermitDefault, nil
+		return a.PermitDefault, errors.New("Could not extract authrole.")
 	}
 
 	isTrustedAuthRole := roles.checkTrustedAuthRoles(a.TrustedAuthRoles)
@@ -74,12 +75,12 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 
 	if err != nil {
 		util.Logger.Warningf("Failed to run authorizer: %v", err)
-		return a.PermitDefault, nil
+		return a.PermitDefault, err
 	}
 
 	if res.Arguments == nil || len(res.Arguments) == 0 {
 		util.Logger.Warning("Authorizer returned no result")
-		return a.PermitDefault, nil
+		return a.PermitDefault, errors.New("Authorizer returned no result")
 	}
 	permit, ok := res.Arguments[0].(bool)
 	if ok {

@@ -178,11 +178,6 @@ func ParseCLI() CLIParameters {
 		assertNotEmpty("Auth role getter function", config.UpstreamGetAuthRolesFunc)
 	}
 
-	if config.EnableAuthorizer && config.EnableFeatureAuthorizer {
-		util.Logger.Criticalf("Can't enable both authorizers. Choose one!")
-		os.Exit(util.ExitArgument)
-	}
-
 	if config.EnableFeatureAuthorizer {
 		assertNotEmpty("Feature Authorizer Matrix", config.UpstreamFeatureAuthorizerMatrix)
 		assertNotEmpty("Feature Authorizer Mapping", config.UpstreamFeatureAuthorizerMapping)

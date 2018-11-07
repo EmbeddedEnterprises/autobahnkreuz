@@ -1,6 +1,7 @@
 package authorization
 
 import (
+	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 	"github.com/gammazero/nexus/router"
 	"github.com/gammazero/nexus/wamp"
 )
@@ -16,7 +17,6 @@ type MultiAuthorizer struct {
 func (mAuth *MultiAuthorizer) AuthorizeEvery(sess *wamp.Session, msg wamp.Message) (bool, error) {
 	for _, Authorizer := range mAuth.Authorizer {
 		isAuthorized, authError := Authorizer.Authorize(sess, msg);
-
 		if isAuthorized {
 			return true, nil
 		}
@@ -30,5 +30,14 @@ func (mAuth *MultiAuthorizer) AuthorizeEvery(sess *wamp.Session, msg wamp.Messag
 }
 
 func (mAuth *MultiAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool, error) {
-	return mAuth.AuthorizeEvery(sess, msg);
+	isAuthorized, authError := mAuth.AuthorizeEvery(sess, msg);
+	util.Logger.Info(msg, isAuthorized)
+
+
+	if authError != nil {
+		util.Logger.Error(authError)
+	}
+
+	return isAuthorized, authError
+
 }

@@ -45,7 +45,7 @@ func NewFeatureAuthorizer(permitDefault bool, matrixURI string, mappingURI strin
 func (this *FeatureAuthorizer) Initialize() {
 
 	util.Logger.Infof("Initializing Feature Authroizer..")
-	util.Logger.Infof("Registering wamp.featureauth.update")
+	util.Logger.Infof("Registering ee.featureauth.update")
 
 	// TBD: We can't use wamp.* prefix here, it's restricted to the router-internal meta client. - Martin
 	// I just changed it to ee.*, which should be the fitting namespace at this point. - Johann

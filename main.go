@@ -151,7 +151,9 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 			}
 
 			authorizers = append(authorizers, dynAuth)
-		} else if config.EnableFeatureAuthorizer {
+		}
+
+		if config.EnableFeatureAuthorizer {
 			util.Logger.Infof("Enabling Feature Authorization.")
 
 			authRef := authorization.NewFeatureAuthorizer(
