@@ -13,10 +13,8 @@ import (
 )
 
 type FeatureAuthorizer struct {
-	PermitDefault    bool
 	MatrixURI        string
 	MappingURI       string
-	TrustedAuthRoles mapset.Set
 	FeatureMatrix    *FeatureMatrix
 	FeatureMapping   *FeatureMapping
 	CallCounter      int
@@ -31,10 +29,8 @@ func NewFeatureAuthorizer(permitDefault bool, matrixURI string, mappingURI strin
 
 	util.Logger.Infof("permitDefault: %v", permitDefault)
 
-	featureAuthorizer.PermitDefault = permitDefault
 	featureAuthorizer.MatrixURI = matrixURI
 	featureAuthorizer.MappingURI = mappingURI
-	featureAuthorizer.TrustedAuthRoles = trustedAuthRoles
 	featureAuthorizer.FeatureMatrix = nil
 	featureAuthorizer.FeatureMapping = nil
 	featureAuthorizer.CallCounter = 0
@@ -205,53 +201,25 @@ func (this *FeatureAuthorizer) UpdateMatrix() error {
 }
 
 func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool, error) {
+	util.Logger.Debug("FeatureAuthorizer: Checking " + msg.MessageType().String())
 
 	util.Logger.Debugf("Pointer Address from FeatureAuthorizer: %p", &this)
 	this.CallCounter++
 	util.Logger.Debugf("Call Counter from FeatureAuthorizer: %v", this.CallCounter)
 
-	roles, err := extractAuthRoles(sess.Details["authrole"])
+	roles, _ := extractAuthRoles(sess.Details["authrole"])
 
 	util.Logger.Debugf("Request: %v Session: %v", msg, sess)
-
-	if err != nil {
-		return this.PermitDefault, nil
-	}
-
-	util.Logger.Infof("Check for trustedAuthRoles")
-	isTrustedAuthRole := roles.checkTrustedAuthRoles(this.TrustedAuthRoles)
-
-	if isTrustedAuthRole {
-		util.Logger.Infof("Call was from trusted auth role. Access granted.")
-		return true, nil
-	}
 
 	if this.FeatureMatrix == nil || this.FeatureMapping == nil {
 		util.Logger.Warningf("FeatureMatrix or FeatureMapping is not defined.")
 		util.Logger.Warningf("FeatureMapping: %v", this.FeatureMapping)
 		util.Logger.Warningf("FeatureMatrix: %v", this.FeatureMatrix)
-		return this.PermitDefault, nil
+		return false, errors.New("FeatureMatrix or FeatureMapping is not defined")
 	}
 
 	// Transform endpointURI to featureItem
-
-	var messageURI wamp.URI
-
-	switch msg.MessageType() {
-	case wamp.CALL:
-		messageURI = msg.(*wamp.Call).Procedure
-	case wamp.REGISTER:
-		messageURI = msg.(*wamp.Register).Procedure
-	case wamp.SUBSCRIBE:
-		messageURI = msg.(*wamp.Subscribe).Topic
-	case wamp.PUBLISH:
-		messageURI = msg.(*wamp.Publish).Topic
-	default:
-		// I am pretty sure, I changed this earlier to true.
-		// It is important to allow every other call than
-		// CALL, REGISTER, SUBSCRIBE and PUBLISH to allow nexus to function correctly.
-		return true, nil
-	}
+	_, messageURI, _ := getMessageURI(msg)
 
 	featureMapping := *this.FeatureMapping
 	featureURI, isOkay := featureMapping[messageURI]
@@ -260,7 +228,7 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 
 		for potentialMessageURI, tFeatureURI := range featureMapping {
 			isMatchingWildcard := messageURI.WildcardMatch(potentialMessageURI)
-			util.Logger.Debugf("messsageURI: %v, potentialMessageURI: %v, isMatchingWildcard: %v", messageURI, potentialMessageURI, isMatchingWildcard)
+			util.Logger.Debugf("messageURI: %v, potentialMessageURI: %v, isMatchingWildcard: %v", messageURI, potentialMessageURI, isMatchingWildcard)
 
 			if isMatchingWildcard {
 				featureURI = tFeatureURI
@@ -271,7 +239,7 @@ func (this *FeatureAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (
 	}
 
 	if !isOkay {
-		return this.PermitDefault, nil
+		return false, errors.New("Could not access feature mapping")
 	}
 
 	featureMatrix := *this.FeatureMatrix

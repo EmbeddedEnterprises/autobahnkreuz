@@ -12,8 +12,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/EmbeddedEnterprises/autobahnkreuz/authorization"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/authentication"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/authorization"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/filter"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
@@ -147,7 +147,6 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 			dynAuth := authorization.DynamicAuthorizer{
 				UpstreamAuthorizer: config.UpstreamAuthorizer,
 				TrustedAuthRoles:   trustedAuthRoles,
-				PermitDefault:      config.AuthorizeFailed == cli.PermitAction,
 			}
 
 			authorizers = append(authorizers, dynAuth)
@@ -157,10 +156,8 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 			util.Logger.Infof("Enabling Feature Authorization.")
 
 			authRef := authorization.NewFeatureAuthorizer(
-				config.AuthorizeFailed == cli.PermitAction,
 				config.UpstreamFeatureAuthorizerMatrix,
 				config.UpstreamFeatureAuthorizerMapping,
-				trustedAuthRoles,
 			)
 
 			authorizers = append(authorizers, authRef)
@@ -168,11 +165,12 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 		}
 
 		multiAuthorizer := authorization.MultiAuthorizer{
-			Authorizer: authorizers,
+			Authorizer:       authorizers,
+			PermitDefault:    config.AuthorizeFailed == cli.PermitAction,
+			TrustedAuthRoles: trustedAuthRoles,
 		}
 
 		realm.Authorizer = &multiAuthorizer;
-
 	}
 
 	if config.ListenTLS != nil && config.ListenTLS.ClientCertPolicy != cli.DisableClientAuthentication {

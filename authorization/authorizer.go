@@ -21,41 +21,14 @@ type DynamicAuthorizer struct {
 
 // Authorize checks whether the session `sess` is allowed to send the message `msg`
 func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool, error) {
+	util.Logger.Debug("DynamicAuthorizer: Checking " + msg.MessageType().String())
 
-	roles, err := extractAuthRoles(sess.Details["authrole"])
+	roles, _ := extractAuthRoles(sess.Details["authrole"]);
 
-	if err != nil {
-		return a.PermitDefault, errors.New("Could not extract authrole.")
-	}
-
-	isTrustedAuthRole := roles.checkTrustedAuthRoles(a.TrustedAuthRoles)
-
-	if isTrustedAuthRole {
-		return true, nil
-	}
-
-	msgType := ""
-	uri := wamp.URI("")
-
-	switch msg.MessageType() {
-	case wamp.CALL:
-		msgType = "call"
-		uri = msg.(*wamp.Call).Procedure
-	case wamp.REGISTER:
-		msgType = "register"
-		uri = msg.(*wamp.Register).Procedure
-	case wamp.SUBSCRIBE:
-		msgType = "subscribe"
-		uri = msg.(*wamp.Subscribe).Topic
-	case wamp.PUBLISH:
-		msgType = "publish"
-		uri = msg.(*wamp.Publish).Topic
-	default:
-		// Fixed the same bug as in the Feature Authorizer.
-		return true, nil
-	}
-
-	//util.Logger.Debugf("Authorizing %v on %v for roles %v", msgType, uri, roles)
+	// We suppress an error at this point, which is not able to occur, due to a check in MultiAuthorizer.
+	// If this happens, there is an issue with the code around this, not with the message, so this should panic, please.
+	msgType, uri, _ := getMessageURI(msg)
+	util.Logger.Debugf("Authorizing %v on %v for roles %v", msgType, uri, roles)
 
 	ctx := context.Background()
 	empty := wamp.Dict{}
@@ -72,6 +45,8 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 		uri,
 		msgType,
 	}, empty, "")
+
+	util.Logger.Debugf("Finished authorizing %v on %v for roles %v", msgType, uri, roles)
 
 	if err != nil {
 		util.Logger.Warningf("Failed to run authorizer: %v", err)
@@ -102,6 +77,9 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 			return permit, nil
 		}
 	}
+
+	util.Logger.Debug("DynamicAuthorizer: Could not determine, if message is allowed or not. Falling back to default.")
+	util.Logger.Debugf("%v", a.PermitDefault)
 
 	return a.PermitDefault, nil
 }
