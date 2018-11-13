@@ -41,9 +41,9 @@ type ResumeAuthenticator struct {
 func NewResumeAuthenticator(authrolefunc string, realm string, invalidRoles mapset.Set) (*ResumeAuthenticator, error) {
 	x := &ResumeAuthenticator{
 		SharedSecretAuthenticator: SharedSecretAuthenticator{
-			AuthMethodValue:  "resume",
-			InvalidAuthRoles: invalidRoles,
-			Realm:            realm,
+			AuthMethodValue:          "resume",
+			InvalidAuthRoles:         invalidRoles,
+			Realm:                    realm,
 			UpstreamGetAuthRolesFunc: authrolefunc,
 		},
 		Tokens: make(map[string]token),
