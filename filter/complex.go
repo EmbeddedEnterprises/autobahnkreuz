@@ -73,36 +73,23 @@ func createFilter(opts wamp.Dict) router.PublishFilter {
 	}
 }
 
-func (c *complexFilter) LockRequired() bool {
-	for _, f := range c.subFilters {
-		if f.LockRequired() {
-			return true
-		}
-	}
-	return false
-}
-
-func (n *negFilter) LockRequired() bool {
-	return n.subFilter.LockRequired()
-}
-
-func (c *complexFilter) PublishAllowed(sub *wamp.Session) bool {
+func (c *complexFilter) Allowed(sub *wamp.Session) bool {
 	if c.match == TypeAll {
 		for _, f := range c.subFilters {
-			if !f.PublishAllowed(sub) {
+			if !f.Allowed(sub) {
 				return false
 			}
 		}
 		return true
 	}
 	for _, f := range c.subFilters {
-		if f.PublishAllowed(sub) {
+		if f.Allowed(sub) {
 			return true
 		}
 	}
 	return false
 }
 
-func (n *negFilter) PublishAllowed(sub *wamp.Session) bool {
-	return !n.subFilter.PublishAllowed(sub)
+func (n *negFilter) Allowed(sub *wamp.Session) bool {
+	return !n.subFilter.Allowed(sub)
 }

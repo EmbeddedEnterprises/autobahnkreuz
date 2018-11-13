@@ -1,10 +1,10 @@
-hash: 82f7fb5177c9168a92a1eae87e6dcd1dd4c7af5d23783587111ce41adf9ab655
-updated: 2018-09-11T23:59:39.700947528+02:00
+hash: 68c420ea70dee765fffaf70bfef1a3fda8bc5809d838bc7682f03a9fb4926eac
+updated: 2018-11-13T17:44:58.882829792+01:00
 imports:
 - name: github.com/deckarep/golang-set
-  version: cbaa98ba5575e67703b32b4b19f73c91f3c4159e
+  version: 699df6a3acf6867538e50931511e9dc403da108a
 - name: github.com/gammazero/nexus
-  version: 28bab3b2824666b3b75aefdd94ec37dd7435f9e2
+  version: b853700ed7b9825090a83816901f0104a2425486
   repo: https://github.com/EmbeddedEnterprises/nexus.git
   vcs: git
   subpackages:
@@ -17,17 +17,17 @@ imports:
   - wamp
   - wamp/crsign
 - name: github.com/gorilla/websocket
-  version: 66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d
+  version: 483fb8d7c32fcb4b5636cd293a92e3935932e2f4
 - name: github.com/op/go-logging
   version: 970db520ece77730c7e4724c61121037378659d9
 - name: github.com/spf13/pflag
-  version: 298182f68c66c05229eb03ac171abe6e309ee79a
+  version: 454a7fbb95f91e2b48adee781b0b02496988da92
 - name: github.com/ugorji/go
-  version: e253f1f20942cb6dc505e504e8bbba4b7f434cb2
+  version: e5e69e061d4f7ee3a69b793cf9c1b41afe21918e
   subpackages:
   - codec
 - name: golang.org/x/crypto
-  version: 0709b304e793a5edb4a2c0145f281ecdc20838a4
+  version: e4dc69e5b2fd71dcaf8bd5d054eb936deb78d1fa
   subpackages:
   - pbkdf2
 testImports: []
