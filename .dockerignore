@@ -1,2 +1,2 @@
-# No files are required for the docker build
-*
+vendor
+bin

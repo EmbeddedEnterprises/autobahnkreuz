@@ -24,9 +24,9 @@ type DynamicTicketAuth struct {
 func NewDynamicTicket(authfunc string, authrolefunc string, realm string, invalid mapset.Set, allowtoken bool) (*DynamicTicketAuth, error) {
 	x := &DynamicTicketAuth{
 		SharedSecretAuthenticator: SharedSecretAuthenticator{
-			AuthMethodValue:  "ticket",
-			InvalidAuthRoles: invalid,
-			Realm:            realm,
+			AuthMethodValue:          "ticket",
+			InvalidAuthRoles:         invalid,
+			Realm:                    realm,
 			UpstreamGetAuthRolesFunc: authrolefunc,
 		},
 		UpstreamAuthFunc: authfunc,
