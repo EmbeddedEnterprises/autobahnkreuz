@@ -80,7 +80,9 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 	}
 	serialize.MsgpackRegisterExtension(reflect.TypeOf(serialize.BinaryData{}), 42, encode, decode)
 	// Create router instance.
-	routerConfig := &router.RouterConfig{}
+	routerConfig := &router.RouterConfig{
+		Debug: util.DebugRouter,
+	}
 	realm := &router.RealmConfig{
 		URI:           wamp.URI(config.Realm),
 		AnonymousAuth: false,
@@ -251,7 +253,6 @@ func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 
 func main() {
 	var err error
-	util.Init()
 	util.Logger.Debug("Interconnect startup")
 	config := cli.ParseCLI()
 

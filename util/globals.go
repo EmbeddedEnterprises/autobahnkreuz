@@ -28,8 +28,9 @@ const ModuleName string = "enterprises.embedded.autobahnkreuz"
 var Logger *logging.Logger
 var LocalClient *client.Client
 var Router router.Router
+var DebugRouter bool
 
-func Init() {
+func init() {
 	// setup logging library
 	var err error
 	Logger, err = logging.GetLogger(ModuleName)
@@ -77,6 +78,7 @@ func Init() {
 		logLevel = logging.INFO
 	case "DEBUG":
 		logLevel = logging.DEBUG
+		DebugRouter = true
 	default:
 		logLevel = logging.INFO
 	}
