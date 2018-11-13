@@ -90,12 +90,6 @@ func NewSimplePublishFilter(opts wamp.Dict) router.PublishFilter {
 	return &simplePublishFilter{blIDs, wlIDs, blMap, wlMap, len(blMap) != 0 || len(wlMap) != 0}
 }
 
-// LockRequired determines whether a consistent state of the subscriber sessions is
-// required while running the filter
-func (f *simplePublishFilter) LockRequired() bool {
-	return f.lockRequired
-}
-
 // PublishAllowed determines if a message is allowed to be published to a
 // subscriber, by looking at any blacklists and whitelists provided with the
 // publish message.
@@ -103,7 +97,7 @@ func (f *simplePublishFilter) LockRequired() bool {
 // To receive a published event, the subscriber session must not have any
 // values that appear in a blacklist, and must have a value from each
 // whitelist.
-func (f *simplePublishFilter) PublishAllowed(sub *wamp.Session) bool {
+func (f *simplePublishFilter) Allowed(sub *wamp.Session) bool {
 	// Check each blacklisted ID to see if session ID is blacklisted.
 	for i := range f.blIDs {
 		if f.blIDs[i] == sub.ID {
