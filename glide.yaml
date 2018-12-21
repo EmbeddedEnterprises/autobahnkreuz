@@ -3,4 +3,4 @@ import:
 - package: github.com/gammazero/nexus
   repo: https://github.com/EmbeddedEnterprises/nexus.git
   vcs: git
-  version: feature/debug
+  version: fix/session-ids
