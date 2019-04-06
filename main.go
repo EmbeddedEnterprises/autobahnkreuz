@@ -70,7 +70,7 @@ func verifyPeer(requireCert bool, validCAs *x509.CertPool) func([][]byte, [][]*x
 	}
 }
 
-func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initializer) {
+func createRouterConfig(config cli.InterconnectConfiguration) (*router.RouterConfig, []Initializer) {
 	encode := func(value reflect.Value) ([]byte, error) {
 		return value.Bytes(), nil
 	}
@@ -172,7 +172,7 @@ func createRouterConfig(config cli.CLIParameters) (*router.RouterConfig, []Initi
 	return routerConfig, initers
 }
 
-func runTLSEndpoint(websocketServer *router.WebsocketServer, config cli.CLIParameters) io.Closer {
+func runTLSEndpoint(websocketServer *router.WebsocketServer, config cli.InterconnectConfiguration) io.Closer {
 	if config.ListenTLS == nil {
 		return nil
 	}
@@ -214,7 +214,7 @@ func runTLSEndpoint(websocketServer *router.WebsocketServer, config cli.CLIParam
 	return closer
 }
 
-func runWSEndpoint(websocketServer *router.WebsocketServer, config cli.CLIParameters) io.Closer {
+func runWSEndpoint(websocketServer *router.WebsocketServer, config cli.InterconnectConfiguration) io.Closer {
 	if config.ListenWS == nil {
 		return nil
 	}
