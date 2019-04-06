@@ -180,7 +180,7 @@ func ParseCLI() InterconnectConfiguration {
 		EnableAnonymousAuth:      cliInput.EnableAnonymous,
 		AnonymousAuthRole:        cliInput.AnonymousAuthRole,
 		EnableTicketAuth:         cliInput.EnableTicket,
-		UpstreamAuthFunc:         cliInput.AuthorizerFunc,
+		UpstreamAuthFunc:         cliInput.TicketCheckFunc,
 		UpstreamGetAuthRolesFunc: cliInput.TicketGetRoleFunc,
 		EnableResumeToken:        cliInput.EnableResumeToken,
 		ReservedAuthRole:         cliInput.ExcludeAuthRole,
