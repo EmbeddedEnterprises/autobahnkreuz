@@ -8,8 +8,12 @@ github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible h1:
 github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible/go.mod h1:0qqt3FvYuipZoxpd+k7ZrNagbFd9BYGwlOPRloSZMKw=
 github.com/gorilla/websocket v0.0.0-20181030144553-483fb8d7c32f h1:a3AO62p4QxRNbwMYvioUwy8S+pA0LD6t6gJlyJoXUcc=
 github.com/gorilla/websocket v0.0.0-20181030144553-483fb8d7c32f/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
+github.com/heetch/confita v0.5.1 h1:EiE32j+Ze0sI0YBeJDSdqTZ32uKz2XCTQIzSgwgfnvk=
+github.com/heetch/confita v0.5.1/go.mod h1:S8Em4kuK8pR5vfTiaNkFLfNDMlGF/EtQUaCxDhXRpCs=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 h1:lDH9UUVJtmYCjyT0CI4q8xvlXPxeZ0gYCVvWbmPlp88=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/spf13/pflag v1.0.1 h1:aCvUg6QPl3ibpQUxyLkrEkCHtPqYJL4x9AuhqVqFis4=
 github.com/spf13/pflag v1.0.1/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
 github.com/spf13/pflag v1.0.3 h1:zPAT6CGy6wXeQ7NtTnaTerfKOsV6V6F8agHXFiazDkg=
