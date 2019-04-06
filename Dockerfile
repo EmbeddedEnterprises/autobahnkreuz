@@ -1,12 +1,13 @@
-FROM embeddedenterprises/burrow as builder
-RUN apk update && apk add build-base
+FROM golang:1.12-alpine as builder
+RUN apk update && apk add build-base git
 
-RUN mkdir $GOPATH/src/github.com/EmbeddedEnterprises/autobahnkreuz
+RUN mkdir -p $GOPATH/src/github.com/EmbeddedEnterprises/autobahnkreuz
 
 COPY . $GOPATH/src/github.com/EmbeddedEnterprises/autobahnkreuz
 WORKDIR $GOPATH/src/github.com/EmbeddedEnterprises/autobahnkreuz
 
-RUN burrow e && burrow b
+RUN go get
+RUN go build -o bin/autobahnkreuz -ldflags "-linkmode external -extldflags -static" -a main.go
 RUN cp bin/autobahnkreuz /bin
 
 FROM scratch

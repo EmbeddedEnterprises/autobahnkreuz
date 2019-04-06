@@ -28,13 +28,11 @@ Afterwards you can enter your configuration parameters. The entire router does n
 
 ### Local
 
-It is nessesary to have a working go installation on your system.  
-We recommend to use [burrow](https://github.com/EmbeddedEnterprises/burrow) to install this project.  
-Burrow is another go dependency management tool, which is also maintainted by [EmbeddedEnterprises](https://github.com/EmbeddedEnterprises).
+It is necessary to have a working go installation on your system.  
 
-`burrow clone https://github.com/EmbeddedEnterprises/autobahnkreuz/` installs the programm to the correct location in your go path.
-After entering the `autobahnkreuz` folder, you can use `burrow run` to start `autobahnkreuz`.
-To configure the instance, you can append your configuration parameters to the `burrow run` command, e.g. `burrow run -- -h.`
+`git clone https://github.com/EmbeddedEnterprises/autobahnkreuz/` clones the project to your current folder.
+After entering the `autobahnkreuz` folder, you can use `go run main.go` to start `autobahnkreuz`.
+To configure the instance, you can append your configuration parameters to the command, e.g. `go run main.go -h`
 
 ### Build Your Own Containers
 

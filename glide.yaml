@@ -1,6 +1,0 @@
-package: github.com/EmbeddedEnterprises/autobahnkreuz
-import:
-- package: github.com/gammazero/nexus
-  repo: https://github.com/EmbeddedEnterprises/nexus.git
-  vcs: git
-  version: fix/session-ids
