@@ -1,16 +1,17 @@
 package cli
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"github.com/heetch/confita"
+	"github.com/heetch/confita/backend/flags"
 	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
-
-	flag "github.com/spf13/pflag"
 )
 
 type TLSClientCAInfo struct {
@@ -45,7 +46,7 @@ type WSEndpoint struct {
 	Host string
 }
 
-type CLIParameters struct {
+type InterconnectConfiguration struct {
 	ListenTLS *TLSEndpoint
 	ListenWS  *WSEndpoint
 	Realm     string
@@ -74,6 +75,37 @@ type CLIParameters struct {
 	EnableFeatureAuthorizer          bool
 	UpstreamFeatureAuthorizerMatrix  string
 	UpstreamFeatureAuthorizerMapping string
+}
+
+type Configuration struct {
+	Realm             string   `config:"realm, required"`
+	EnableAnonymous   bool     `config:"enable-anonymous"`
+	AnonymousAuthRole string   `config:"anonymous-authrole"`
+	EnableTicket      bool     `config:"enable-ticket"`
+	TicketCheckFunc   string   `config:"ticket-check-func"`
+	TicketGetRoleFunc string   `config:"ticket-get-role-func"`
+	ExcludeAuthRole   []string `config:"exclude-auth-role"`
+	EnableResumeToken bool     `config:"enable-resume-token"`
+
+	EnableWs bool   `config:"enable-ws"`
+	WsHost   string `config:"ws-host"`
+	WsPort   uint16 `config:"ws-port"`
+
+	EnableWss     bool     `config:"enable-wss"`
+	WssHost       string   `config:"wss-host"`
+	WssPort       uint16   `config:"wss-port"`
+	WssCertFile   string   `config:"wss-cert-file"`
+	WssKeyFile    string   `config:"wss-key-file"`
+	WssClientAuth string   `config:"wss-client-auth"`
+	WssClientCA   []string `config:"wss-client-ca"`
+
+	EnableAuthorizer                bool     `config:"enable-authorization"`
+	AuthorizerFunc                  string   `config:"authorizer-func"`
+	EnableFeatureAuthorization      bool     `config:"enable-feature-authorization"`
+	FeatureAuthorizationMatrixFunc  string   `config:"feature-authorizer-matrix-func"`
+	FeatureAuthorizationMappingFunc string   `config:"feature-authorizer-mapping-func"`
+	TrustedAuthRoles                []string `config:"trusted-authroles"`
+	AuthorizerFallback              string   `config:"authorizer-fallback"`
 }
 
 func assertNotEmpty(name, value string) {
@@ -111,58 +143,54 @@ func parseClientCA(cca string) TLSClientCAInfo {
 	}
 }
 
-func ParseCLI() CLIParameters {
-	// Step 1: Build the command line interface.
-	// we start with some really basic parameters
-	cliRealm := flag.StringP("realm", "r", "", "The realm to run the router on")
-	cliAnonEnable := flag.Bool("enable-anonymous", true, "Whether to allow authmethod 'anonymous'")
-	cliAnonRole := flag.String("anonymous-authrole", "anonymous", "Authentication role to assign to anonymous clients")
-	cliTicketEnable := flag.Bool("enable-ticket", true, "Whether to allow authmethod 'ticket'")
-	cliTicketUpstream := flag.String("ticket-check-func", "", "Which WAMP RPC to call when ticket authentication is requested")
-	cliTicketRoleUpstream := flag.String("ticket-get-role-func", "", "Which WAMP RPC to call to resolve authid to authrole/authextra")
-	cliExcludeAuthRoles := flag.StringSlice("exclude-auth-role", nil, "Authentication roles to exclude from ticket authentication")
-	cliEnableResumeToken := flag.Bool("enable-resume-token", true, "Whether to allow ticket authentication to have a keep-me-logged-in token.")
+func ParseCLI() InterconnectConfiguration {
 
-	// Unencrypted endpoint
-	cliEnableWS := flag.Bool("enable-ws", true, "Enable unencrypted WebSocket endpoint")
-	cliPortWS := flag.Uint16("ws-port", 8001, "Port for the WebSocket endpoint")
-	cliHostWS := flag.String("ws-host", "", "Listen address for the WebSocket endpoint")
+	cliInput := Configuration{
+		EnableAnonymous:   true,
+		AnonymousAuthRole: "anonymous",
+		EnableTicket:      true,
+		EnableResumeToken: true,
 
-	// Encrypted endpoint
-	cliEnableWSS := flag.Bool("enable-wss", true, "Enable encrypted WebSocket endpoint")
-	cliPortWSS := flag.Uint16("wss-port", 8000, "Port for the TLS endpoint")
-	cliHostWSS := flag.String("wss-host", "", "Listen address for the TLS endpoint")
-	cliKeyWSS := flag.String("wss-key-file", "", "TLS Key file")
-	cliCertWSS := flag.String("wss-cert-file", "", "TLS Cert file")
-	cliClientAuth := flag.String("wss-client-auth", "accept", "Use TLS client authentication (values: 'no', 'accept', 'require')")
-	cliClientCAs := flag.StringSlice("wss-client-ca", nil, "Acceptable client CAs and their authroles (format: 'authrole;ca-cert.pem,authrole;ca-cert.pem,....')")
+		EnableWs: true,
+		WsPort:   8001,
 
-	cliEnableAuthorizer := flag.Bool("enable-authorization", true, "Enable dynamic checking of auth roles")
-	cliUpstreamAuthorizer := flag.String("authorizer-func", "", "Which WAMP RPC to call when an action has to be authorized")
-	cliEnableFeatureAuthorizer := flag.Bool("enable-feature-authorization", false, "Enable authorization checking based on a feature matrix")
-	cliUpstreamFeatureAuthorizerMatrix := flag.String("feature-authorizer-matrix-func", "", "Which WAMP RPC to call to get a feature matrix")
-	cliUpstreamFeatureAuthorizerMapping := flag.String("feature-authorizer-mapping-func", "", "Which WAMP RPC to call to get a feature mapping")
-	cliTrustAuthRoles := flag.StringSlice("trusted-authroles", nil, "Authorize any actions of these authentication roles")
-	cliAuthorizerFailed := flag.String("authorizer-fallback", "reject", "Whether to permit any actions if the authorizer endpoint fails (values: 'permit', 'reject')")
-	// Call the command line parser
-	flag.Parse()
+		EnableWss:     true,
+		WssPort:       8000,
+		WssClientAuth: "accept",
 
-	config := CLIParameters{
-		Realm:                    *cliRealm,
-		EnableAnonymousAuth:      *cliAnonEnable,
-		AnonymousAuthRole:        *cliAnonRole,
-		EnableTicketAuth:         *cliTicketEnable,
-		UpstreamAuthFunc:         *cliTicketUpstream,
-		UpstreamGetAuthRolesFunc: *cliTicketRoleUpstream,
-		EnableResumeToken:        *cliEnableResumeToken,
-		ReservedAuthRole:         *cliExcludeAuthRoles,
-		EnableAuthorizer:         *cliEnableAuthorizer,
-		TrustedAuthRoles:         *cliTrustAuthRoles,
-		UpstreamAuthorizer:       *cliUpstreamAuthorizer,
+		EnableAuthorizer:           true,
+		EnableFeatureAuthorization: true,
+		AuthorizerFallback:         "reject",
+	}
 
-		EnableFeatureAuthorizer:          *cliEnableFeatureAuthorizer,
-		UpstreamFeatureAuthorizerMatrix:  *cliUpstreamFeatureAuthorizerMatrix,
-		UpstreamFeatureAuthorizerMapping: *cliUpstreamFeatureAuthorizerMapping,
+	loader := confita.NewLoader(
+		flags.NewBackend(),
+	)
+
+	err := loader.Load(context.Background(), &cliInput)
+
+	if err != nil {
+		util.Logger.Critical("Failed to load configuration")
+		util.Logger.Critical(err)
+		os.Exit(util.ExitArgument)
+	}
+
+	config := InterconnectConfiguration{
+		Realm:                    cliInput.Realm,
+		EnableAnonymousAuth:      cliInput.EnableAnonymous,
+		AnonymousAuthRole:        cliInput.AnonymousAuthRole,
+		EnableTicketAuth:         cliInput.EnableTicket,
+		UpstreamAuthFunc:         cliInput.AuthorizerFunc,
+		UpstreamGetAuthRolesFunc: cliInput.TicketGetRoleFunc,
+		EnableResumeToken:        cliInput.EnableResumeToken,
+		ReservedAuthRole:         cliInput.ExcludeAuthRole,
+		EnableAuthorizer:         cliInput.EnableAuthorizer,
+		TrustedAuthRoles:         cliInput.TrustedAuthRoles,
+		UpstreamAuthorizer:       cliInput.AuthorizerFunc,
+
+		EnableFeatureAuthorizer:          cliInput.EnableFeatureAuthorization,
+		UpstreamFeatureAuthorizerMatrix:  cliInput.FeatureAuthorizationMatrixFunc,
+		UpstreamFeatureAuthorizerMapping: cliInput.FeatureAuthorizationMappingFunc,
 	}
 
 	assertNotEmpty("Realm", config.Realm)
@@ -190,7 +218,7 @@ func ParseCLI() CLIParameters {
 
 	if config.EnableAuthorizer {
 		assertNotEmpty("Authorization function", config.UpstreamAuthorizer)
-		switch *cliAuthorizerFailed {
+		switch cliInput.AuthorizerFallback {
 		case "permit", "accept":
 			config.AuthorizeFailed = PermitAction
 		default:
@@ -199,32 +227,32 @@ func ParseCLI() CLIParameters {
 	}
 
 	enabled := false
-	if *cliEnableWS {
+	if cliInput.EnableWs {
 		enabled = true
 		config.ListenWS = &WSEndpoint{
-			Port: *cliPortWS,
+			Port: cliInput.WsPort,
 			// Host may be empty here, which means 0.0.0.0
-			Host: *cliHostWS,
+			Host: cliInput.WsHost,
 		}
 	}
-	if *cliEnableWSS {
+	if cliInput.EnableWss {
 		enabled = true
 		config.ListenTLS = &TLSEndpoint{
 			WS: WSEndpoint{
-				Port: *cliPortWSS,
+				Port: cliInput.WssPort,
 				// Host may be empty here, which means 0.0.0.0
-				Host: *cliHostWSS,
+				Host: cliInput.WssHost,
 			},
 		}
 
-		serverCert, err := tls.LoadX509KeyPair(*cliCertWSS, *cliKeyWSS)
+		serverCert, err := tls.LoadX509KeyPair(cliInput.WssCertFile, cliInput.WssKeyFile)
 		if err != nil {
 			util.Logger.Criticalf("Failed to load server certificate: %v", err)
 			os.Exit(util.ExitArgument)
 		}
 		config.ListenTLS.Certificate = serverCert
 
-		switch *cliClientAuth {
+		switch cliInput.WssClientAuth {
 		case "no":
 			config.ListenTLS.ClientCertPolicy = DisableClientAuthentication
 		case "require":
@@ -234,7 +262,7 @@ func ParseCLI() CLIParameters {
 		}
 
 		if config.ListenTLS.ClientCertPolicy != DisableClientAuthentication {
-			for _, cca := range *cliClientCAs {
+			for _, cca := range cliInput.WssClientCA {
 				config.ListenTLS.ValidClientCAs = append(
 					config.ListenTLS.ValidClientCAs,
 					parseClientCA(cca),
