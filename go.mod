@@ -1,7 +1,5 @@
 module github.com/EmbeddedEnterprises/autobahnkreuz
 
-go 1.12
-
 require (
 	github.com/deckarep/golang-set v0.0.0-20180927150649-699df6a3acf6
 	github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible
