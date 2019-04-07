@@ -1,8 +1,0 @@
-package: github.com/EmbeddedEnterprises/autobahnkreuz
-import:
-- package: github.com/gammazero/nexus
-  version: fix/session-ids
-  repo: https://github.com/EmbeddedEnterprises/nexus.git
-  vcs: git
-- package: github.com/heetch/confita
-  version: ^0.5.1
