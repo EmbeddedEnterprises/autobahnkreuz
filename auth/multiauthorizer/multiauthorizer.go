@@ -10,7 +10,7 @@ type ConsentMode int
 
 const (
 	ConsentModeAll ConsentMode = iota
-	ConsentModeOne ConsentMode = iota
+	ConsentModeOne
 )
 
 type MultiAuthorizer struct {

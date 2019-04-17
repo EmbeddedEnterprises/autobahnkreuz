@@ -187,7 +187,7 @@ We recommend the awesome [EasyPKI](https://github.com/google/easypki) project to
 
 You can only use multiple authorization methods, by default, this is only the dynamic authorization.
 
-If you use multiple authentication methods, you may want to choose an consent mode. By default, every authorizer needs to
+If you use multiple authorization methods, you may want to choose an consent mode. By default, every authorizer needs to
 give consent to an call. You also have the opportunity to choose the `one` consent mode, 
 where only one authorizer needs to give consent to an call.
 
