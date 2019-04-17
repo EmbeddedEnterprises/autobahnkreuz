@@ -75,6 +75,8 @@ type InterconnectConfiguration struct {
 	EnableFeatureAuthorizer          bool
 	UpstreamFeatureAuthorizerMatrix  string
 	UpstreamFeatureAuthorizerMapping string
+
+	ConsentMode string
 }
 
 type Configuration struct {
@@ -106,6 +108,7 @@ type Configuration struct {
 	FeatureAuthorizationMappingFunc string   `config:"feature-authorizer-mapping-func"`
 	TrustedAuthRoles                []string `config:"trusted-authroles"`
 	AuthorizerFallback              string   `config:"authorizer-fallback"`
+	ConsentMode                     string   `config:"consent-mode"`
 }
 
 func assertNotEmpty(name, value string) {
@@ -161,6 +164,7 @@ func ParseCLI() InterconnectConfiguration {
 		EnableAuthorizer:           true,
 		EnableFeatureAuthorization: true,
 		AuthorizerFallback:         "reject",
+		ConsentMode:                "all",
 	}
 
 	loader := confita.NewLoader(
@@ -191,6 +195,8 @@ func ParseCLI() InterconnectConfiguration {
 		EnableFeatureAuthorizer:          cliInput.EnableFeatureAuthorization,
 		UpstreamFeatureAuthorizerMatrix:  cliInput.FeatureAuthorizationMatrixFunc,
 		UpstreamFeatureAuthorizerMapping: cliInput.FeatureAuthorizationMappingFunc,
+
+		ConsentMode: cliInput.ConsentMode,
 	}
 
 	assertNotEmpty("Realm", config.Realm)
@@ -283,5 +289,13 @@ func ParseCLI() InterconnectConfiguration {
 		util.Logger.Critical("Otherwise no client will be able to connect!")
 		os.Exit(util.ExitArgument)
 	}
+
+	if config.ConsentMode != "all" && config.ConsentMode != "one" {
+		util.Logger.Critical("You have to set a predefined consent mode.")
+		util.Logger.Critical("Possible Values: all, one")
+		os.Exit(util.ExitArgument)
+
+	}
+
 	return config
 }

@@ -185,7 +185,16 @@ We recommend the awesome [EasyPKI](https://github.com/google/easypki) project to
 - Dynamic authorization using a provided WAMP endpoint
 - Authorization based on a feature matrix (**alpha state, not production ready**)
 
-You can only use **one** authorization method at a time, by default, this is the dynamic authorization.
+You can only use multiple authorization methods, by default, this is only the dynamic authorization.
+
+If you use multiple authentication methods, you may want to choose an consent mode. By default, every authorizer needs to
+give consent to an call. You also have the opportunity to choose the `one` consent mode, 
+where only one authorizer needs to give consent to an call.
+
+| CLI Parameter                     | Type      | Default Value  | Description |
+| --------------------------------- | --------- | -------------- | ----------- |
+| --consent-mode                    | string    | all            | Whether to need one or multiple consents per call (values: 'all', 'one') |
+
 
 #### Dynamic Authorization
 

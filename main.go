@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/auth/multiauthorizer"
 	"io"
 	"net/http"
 	"os"
@@ -139,17 +140,31 @@ func createRouterConfig(config cli.InterconnectConfiguration) (*router.RouterCon
 		// If you use client.ConnectLocal, the client automagically gets the trusted auth role.
 		trustedAuthRoles.Add("trusted")
 
-		if config.EnableAuthorizer {
-			util.Logger.Infof("Enabling authorization, func: %v", config.UpstreamAuthorizer)
+		var consentMode multiauthorizer.ConsentMode
 
-			realm.Authorizer = auth.DynamicAuthorizer{
+		if config.ConsentMode == "all" {
+			consentMode = multiauthorizer.ConsentModeAll
+		} else if config.ConsentMode == "one" {
+			consentMode = multiauthorizer.ConsentModeOne
+		}
+
+		mAuth := multiauthorizer.New(consentMode)
+
+		if config.EnableAuthorizer {
+			util.Logger.Infof("Enabling Dynamic Authorization, func: %v", config.UpstreamAuthorizer)
+
+			dynamicAuth := auth.DynamicAuthorizer{
 				UpstreamAuthorizer: config.UpstreamAuthorizer,
 				TrustedAuthRoles:   trustedAuthRoles,
 				PermitDefault:      config.AuthorizeFailed == cli.PermitAction,
 			}
-		} else if config.EnableFeatureAuthorizer {
+
+			mAuth.Add("DynamicAuth", dynamicAuth)
+
+		}
+
+		if config.EnableFeatureAuthorizer {
 			util.Logger.Infof("Enabling Feature Authorization.")
-			util.Logger.Infof("Ensure, you really want to do this. Dynamic Authorization is not active.")
 
 			authRef := auth.NewFeatureAuthorizer(
 				config.AuthorizeFailed == cli.PermitAction,
@@ -158,9 +173,11 @@ func createRouterConfig(config cli.InterconnectConfiguration) (*router.RouterCon
 				trustedAuthRoles,
 			)
 
-			realm.Authorizer = authRef
+			mAuth.Add("FeatureAuth", authRef)
 			initers = append(initers, authRef.Initialize)
 		}
+
+		realm.Authorizer = mAuth
 	}
 
 	if config.ListenTLS != nil && config.ListenTLS.ClientCertPolicy != cli.DisableClientAuthentication {
