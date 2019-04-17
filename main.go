@@ -151,7 +151,7 @@ func createRouterConfig(config cli.InterconnectConfiguration) (*router.RouterCon
 		mAuth := multiauthorizer.New(consentMode)
 
 		if config.EnableAuthorizer {
-			util.Logger.Infof("Enabling Dynamic Authorization, func: %v", config.UpstreamAuthorizer)
+			util.Logger.Infof("Enabling dynamic Authorization, func: %v", config.UpstreamAuthorizer)
 
 			dynamicAuth := auth.DynamicAuthorizer{
 				UpstreamAuthorizer: config.UpstreamAuthorizer,
