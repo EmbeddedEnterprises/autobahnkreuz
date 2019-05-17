@@ -8,8 +8,10 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/spf13/pflag v1.0.3
-	github.com/ugorji/go v1.1.2
-	github.com/ugorji/go/codec v0.0.0-20190320090025-2dc34c0b8780 // indirect
-	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
-	golang.org/x/sys v0.0.0-20190405154228-4b34438f7a67 // indirect
+	github.com/ugorji/go v1.1.4
+	golang.org/x/crypto v0.0.0-20190513172903-22d7a77e9e5f
+	golang.org/x/net v0.0.0-20190514140710-3ec191127204 // indirect
+	golang.org/x/sys v0.0.0-20190516110030-61b9204099cb // indirect
+	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/tools v0.0.0-20190517003510-bffc5affc6df // indirect
 )
