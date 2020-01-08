@@ -3,8 +3,8 @@ package auth
 import (
 	"errors"
 
-	"github.com/deckarep/golang-set"
-	"github.com/gammazero/nexus/wamp"
+	mapset "github.com/deckarep/golang-set"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 // authRoles is a list of authroles which can be used to check against a set of authroles

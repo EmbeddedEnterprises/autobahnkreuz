@@ -2,8 +2,8 @@ package multiauthorizer
 
 import (
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
-	nexus "github.com/gammazero/nexus/router"
-	"github.com/gammazero/nexus/wamp"
+	nexus "github.com/gammazero/nexus/v3/router"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 type ConsentMode int

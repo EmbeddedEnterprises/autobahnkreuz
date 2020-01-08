@@ -8,8 +8,8 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 
-	"github.com/gammazero/nexus/client"
-	"github.com/gammazero/nexus/wamp"
+	"github.com/gammazero/nexus/v3/client"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 type FeatureAuthorizer struct {
@@ -50,20 +50,18 @@ func (this *FeatureAuthorizer) Initialize() {
 	// TBD: We can't use wamp.* prefix here, it's restricted to the router-internal meta client. - Martin
 	// I just changed it to ee.*, which should be the fitting namespace at this point. - Johann
 	err := util.LocalClient.Register("ee.featureauth.update", this.Update, wamp.Dict{})
-
 	if err != nil {
 		util.Logger.Warningf("%v", err)
 	}
 }
 
-func (this *FeatureAuthorizer) Update(_ context.Context, args wamp.List, _, _ wamp.Dict) *client.InvokeResult {
-
+func (this *FeatureAuthorizer) Update(_ context.Context, _ *wamp.Invocation) client.InvokeResult {
 	util.Logger.Infof("Updating Matrix and Mapping.")
 
 	err := this.UpdateMatrix()
 
 	if err != nil {
-		return &client.InvokeResult{
+		return client.InvokeResult{
 			Err: wamp.URI("wamp.error.internal-error"),
 		}
 	}
@@ -71,22 +69,20 @@ func (this *FeatureAuthorizer) Update(_ context.Context, args wamp.List, _, _ wa
 	err = this.UpdateMapping()
 
 	if err != nil {
-		return &client.InvokeResult{
+		return client.InvokeResult{
 			Err: wamp.URI("wamp.error.internal-error"),
 		}
 	}
 
-	return &client.InvokeResult{}
+	return client.InvokeResult{}
 }
 
 func (this *FeatureAuthorizer) UpdateMapping() error {
-
 	ctx := context.Background()
-	emptyDict := wamp.Dict{}
 
 	// callArguments is empty right now, but maybe not forever.
 	callArguments := wamp.List{}
-	callRes, callErr := util.LocalClient.Call(ctx, this.MappingURI, emptyDict, callArguments, emptyDict, "")
+	callRes, callErr := util.LocalClient.Call(ctx, this.MappingURI, nil, callArguments, nil, nil)
 
 	if callErr != nil {
 		util.Logger.Warningf("%s was not callable.", this.MappingURI)
@@ -144,11 +140,10 @@ func (this *FeatureAuthorizer) UpdateMapping() error {
 func (this *FeatureAuthorizer) UpdateMatrix() error {
 
 	ctx := context.Background()
-	emptyDict := wamp.Dict{}
 
 	// callArguments is empty right now, but maybe not forever.
 	callArguments := wamp.List{}
-	callRes, callErr := util.LocalClient.Call(ctx, this.MatrixURI, emptyDict, callArguments, emptyDict, "")
+	callRes, callErr := util.LocalClient.Call(ctx, this.MatrixURI, nil, callArguments, nil, nil)
 
 	if callErr != nil {
 		util.Logger.Warningf("%s was not callable.", this.MatrixURI)

@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/EmbeddedEnterprises/autobahnkreuz/auth/multiauthorizer"
 	"io"
 	"net/http"
 	"os"
@@ -13,17 +12,18 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/EmbeddedEnterprises/autobahnkreuz/auth/multiauthorizer"
+
 	"github.com/EmbeddedEnterprises/autobahnkreuz/auth"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/filter"
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
-	"github.com/deckarep/golang-set"
-	"github.com/gammazero/nexus/client"
-	"github.com/gammazero/nexus/router"
-	"github.com/gammazero/nexus/transport"
-	"github.com/gammazero/nexus/transport/serialize"
-	"github.com/gammazero/nexus/wamp"
+	mapset "github.com/deckarep/golang-set"
+	"github.com/gammazero/nexus/v3/client"
+	"github.com/gammazero/nexus/v3/router"
+	"github.com/gammazero/nexus/v3/transport/serialize"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 type Initializer func()
@@ -71,7 +71,7 @@ func verifyPeer(requireCert bool, validCAs *x509.CertPool) func([][]byte, [][]*x
 	}
 }
 
-func createRouterConfig(config cli.InterconnectConfiguration) (*router.RouterConfig, []Initializer) {
+func createRouterConfig(config cli.InterconnectConfiguration) (*router.Config, []Initializer) {
 	encode := func(value reflect.Value) ([]byte, error) {
 		return value.Bytes(), nil
 	}
@@ -81,7 +81,7 @@ func createRouterConfig(config cli.InterconnectConfiguration) (*router.RouterCon
 	}
 	serialize.MsgpackRegisterExtension(reflect.TypeOf(serialize.BinaryData{}), 42, encode, decode)
 	// Create router instance.
-	routerConfig := &router.RouterConfig{}
+	routerConfig := &router.Config{}
 	realm := &router.RealmConfig{
 		URI:           wamp.URI(config.Realm),
 		AnonymousAuth: false,
@@ -252,12 +252,9 @@ func runWSEndpoint(websocketServer *router.WebsocketServer, config cli.Interconn
 func generateWebsocketServer(nxr *router.Router) *router.WebsocketServer {
 	// Create and run server.
 	srv := router.NewWebsocketServer(*nxr)
-	srv.SetConfig(transport.WebsocketConfig{
-		EnableRequestCapture: true,
-	})
 
+	srv.EnableRequestCapture = true
 	srv.KeepAlive = 5 * time.Second
-
 	// Disable CORS, since we're running behind a reverse proxy anyway
 	srv.Upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
@@ -286,7 +283,7 @@ func main() {
 	closerTLS := runTLSEndpoint(websocketServer, config)
 	closer := runWSEndpoint(websocketServer, config)
 
-	util.LocalClient, err = client.ConnectLocal(util.Router, client.ClientConfig{
+	util.LocalClient, err = client.ConnectLocal(util.Router, client.Config{
 		Realm: config.Realm,
 	})
 	if err != nil {
