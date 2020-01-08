@@ -1,8 +1,8 @@
 package filter
 
 import (
-	"github.com/gammazero/nexus/router"
-	"github.com/gammazero/nexus/wamp"
+	"github.com/gammazero/nexus/v3/router"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 const (

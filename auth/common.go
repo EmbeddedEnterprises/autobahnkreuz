@@ -6,8 +6,8 @@ import (
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 
-	"github.com/deckarep/golang-set"
-	"github.com/gammazero/nexus/wamp"
+	mapset "github.com/deckarep/golang-set"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 // SharedSecretAuthenticator is a base type of authenticators which operate on
@@ -28,11 +28,10 @@ func (s *SharedSecretAuthenticator) AuthMethod() string {
 // client based on its authid using the configured UpstreamGetAuthRolesFunc
 func (s *SharedSecretAuthenticator) FetchAndFilterAuthRoles(authid string) (*wamp.Welcome, error) {
 	ctx := context.Background()
-	empty := wamp.Dict{}
-	result, err := util.LocalClient.Call(ctx, s.UpstreamGetAuthRolesFunc, empty, wamp.List{
+	result, err := util.LocalClient.Call(ctx, s.UpstreamGetAuthRolesFunc, nil, wamp.List{
 		s.Realm,
 		authid,
-	}, empty, "")
+	}, nil, nil)
 	if err != nil {
 		util.Logger.Warningf("Failed to call `%s`: %v", s.UpstreamGetAuthRolesFunc, err)
 		return nil, errors.New("Unauthorized")

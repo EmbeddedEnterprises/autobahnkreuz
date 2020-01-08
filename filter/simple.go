@@ -3,8 +3,8 @@ package filter
 import (
 	"strings"
 
-	"github.com/gammazero/nexus/router"
-	"github.com/gammazero/nexus/wamp"
+	"github.com/gammazero/nexus/v3/router"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 type simplePublishFilter struct {

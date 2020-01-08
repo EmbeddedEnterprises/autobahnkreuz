@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
+	mapset "github.com/deckarep/golang-set"
 
-	"github.com/deckarep/golang-set"
-	"github.com/gammazero/nexus/client"
-	"github.com/gammazero/nexus/wamp"
+	"github.com/gammazero/nexus/v3/client"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 func randomHex(n int) (string, error) {
@@ -61,21 +61,27 @@ func (r *ResumeAuthenticator) Initialize() {
 	}
 }
 
-func (r *ResumeAuthenticator) createNewToken(_ context.Context, args wamp.List, _, _ wamp.Dict) *client.InvokeResult {
+func (r *ResumeAuthenticator) createNewToken(_ context.Context, invk *wamp.Invocation) client.InvokeResult {
+	if invk == nil {
+		return client.InvokeResult{
+			Err: wamp.ErrInvalidArgument,
+		}
+	}
+	args := invk.Arguments
 	if len(args) == 0 {
-		return &client.InvokeResult{
+		return client.InvokeResult{
 			Err: wamp.ErrInvalidArgument,
 		}
 	}
 	authid, ok := wamp.AsString(args[0])
 	if !ok || authid == "" {
-		return &client.InvokeResult{
+		return client.InvokeResult{
 			Err: wamp.ErrInvalidArgument,
 		}
 	}
 	userToken, err := randomHex(64)
 	if err != nil {
-		return &client.InvokeResult{
+		return client.InvokeResult{
 			Err: wamp.URI("wamp.error.internal-error"),
 		}
 	}
@@ -83,7 +89,7 @@ func (r *ResumeAuthenticator) createNewToken(_ context.Context, args wamp.List, 
 		AuthID:     authid,
 		ExpireDate: time.Now().Add(7 * 24 * time.Hour), // one week
 	}
-	return &client.InvokeResult{
+	return client.InvokeResult{
 		Args: wamp.List{
 			userToken,
 		},
@@ -130,9 +136,11 @@ func (r *ResumeAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 
 	authid = tokenObj.AuthID
 	util.Logger.Infof("Token login for user %v", authid)
-	newTokenRes := r.createNewToken(context.Background(), wamp.List{
-		authid,
-	}, nil, nil)
+	newTokenRes := r.createNewToken(context.Background(), &wamp.Invocation{
+		Arguments: wamp.List{
+			authid,
+		},
+	})
 
 	welcome, err := r.FetchAndFilterAuthRoles(authid)
 	if err != nil {

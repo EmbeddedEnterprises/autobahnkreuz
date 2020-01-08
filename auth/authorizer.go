@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
+	mapset "github.com/deckarep/golang-set"
 
-	"github.com/deckarep/golang-set"
-	"github.com/gammazero/nexus/wamp"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 // DynamicAuthorizer is an authorizer that uses a WAMP RPC call to verify permissions
@@ -57,7 +57,6 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 	//util.Logger.Debugf("Authorizing %v on %v for roles %v", msgType, uri, roles)
 
 	ctx := context.Background()
-	empty := wamp.Dict{}
 	session := wamp.Dict{
 		"realm":        a.Realm,
 		"authprovider": sess.Details["authprovider"],
@@ -66,11 +65,11 @@ func (a DynamicAuthorizer) Authorize(sess *wamp.Session, msg wamp.Message) (bool
 		"authmethod":   sess.Details["authmethod"],
 		"authrole":     roles,
 	}
-	res, err := util.LocalClient.Call(ctx, a.UpstreamAuthorizer, empty, wamp.List{
+	res, err := util.LocalClient.Call(ctx, a.UpstreamAuthorizer, nil, wamp.List{
 		session,
 		uri,
 		msgType,
-	}, empty, "")
+	}, nil, nil)
 
 	if err != nil {
 		util.Logger.Warningf("Failed to run authorizer: %v", err)

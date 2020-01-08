@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
+	mapset "github.com/deckarep/golang-set"
 
-	"github.com/deckarep/golang-set"
-	superClient "github.com/gammazero/nexus/client"
-	"github.com/gammazero/nexus/wamp"
+	superClient "github.com/gammazero/nexus/v3/client"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 // DynamicTicketAuth is an authenticator which performs authentication based on
@@ -39,7 +39,6 @@ func NewDynamicTicket(authfunc string, authrolefunc string, realm string, invali
 // authenticates the user based on its response.
 func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client wamp.Peer) (*wamp.Welcome, error) {
 	ctx := context.Background()
-	empty := wamp.Dict{}
 	authid := wamp.OptionString(details, "authid")
 	if authid == "" {
 		return nil, errors.New("wamp.error.empty-auth-id")
@@ -72,11 +71,11 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 	ticketObj := wamp.Dict{
 		"ticket": authRsp.Signature,
 	}
-	_, err = util.LocalClient.Call(ctx, a.UpstreamAuthFunc, empty, wamp.List{
+	_, err = util.LocalClient.Call(ctx, a.UpstreamAuthFunc, nil, wamp.List{
 		a.Realm,
 		authid,
 		ticketObj,
-	}, empty, "")
+	}, nil, nil)
 	if err != nil {
 		util.Logger.Warningf("Failed to call `%s`: %v", a.UpstreamAuthFunc, err)
 
@@ -96,7 +95,7 @@ func (a *DynamicTicketAuth) Authenticate(sid wamp.ID, details wamp.Dict, client 
 	if a.AllowResumeToken && wamp.OptionFlag(authRsp.Extra, "generate-token") {
 		resp, err := util.LocalClient.Call(context.Background(), "ee.auth.create-token", nil, wamp.List{
 			authid,
-		}, nil, "")
+		}, nil, nil)
 		if err == nil {
 			x, _ := wamp.AsDict(welcome.Details["authextra"])
 			x["resume-token"] = resp.Arguments[0]

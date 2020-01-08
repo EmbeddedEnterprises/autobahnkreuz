@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/gammazero/nexus/wamp"
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 // AnonymousAuth is a authenticator which provides a configurable authrole

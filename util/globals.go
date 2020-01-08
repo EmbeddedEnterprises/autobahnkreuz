@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gammazero/nexus/client"
-	"github.com/gammazero/nexus/router"
+	"github.com/gammazero/nexus/v3/client"
+	"github.com/gammazero/nexus/v3/router"
 	"github.com/op/go-logging"
 )
 

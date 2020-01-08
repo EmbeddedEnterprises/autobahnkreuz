@@ -3,11 +3,12 @@ package auth
 import (
 	"bytes"
 	"errors"
-	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
-	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
 	"net/http"
 
-	"github.com/gammazero/nexus/wamp"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/cli"
+	"github.com/EmbeddedEnterprises/autobahnkreuz/util"
+
+	"github.com/gammazero/nexus/v3/wamp"
 )
 
 type TLSAuth struct {
