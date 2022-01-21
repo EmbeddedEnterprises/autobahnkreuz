@@ -1,4 +1,4 @@
-FROM golang:1.12-alpine as builder
+FROM golang:1.17-alpine as builder
 RUN apk update && apk add build-base git
 
 RUN mkdir -p /autobahnkreuz
